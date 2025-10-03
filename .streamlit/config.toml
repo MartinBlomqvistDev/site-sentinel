@@ -1,0 +1,9 @@
+[theme]
+# Primary color (Used for buttons, links, and selected elements)
+primaryColor="#ff0000" 
+# Background color (Deep black)
+backgroundColor="#000000" 
+# Secondary background (Used for sidebars and input fields)
+secondaryBackgroundColor="#000523" 
+# Text color (Bright white for maximum contrast)
+textColor="#FFFFFF" 

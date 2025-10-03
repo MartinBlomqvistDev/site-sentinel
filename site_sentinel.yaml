@@ -1,0 +1,18 @@
+# Dataset: Site Sentinel Construction Safety
+# Base path where your extracted images and labels will be saved
+# NOTE: This path MUST be accurate on your local machine after extraction.
+path: C:/DS24/Site_Sentinel/data/extracted_frames
+
+# List of all classes (labels) YOLO needs to learn.
+# Ensure these match the labels found in your annotations.zip!
+names:
+  0: person              # Worker/Pedestrian
+  1: vehicle             # Generic cars/small vehicles
+  2: truck               # Large trucks
+  3: heavy_machinery     # Excavators, Cranes (Use this general term)
+  4: safety_vest         # If available in annotations
+  5: hard_hat            # If available in annotations
+
+# Paths to the training and validation image folders (relative to 'path' above)
+train: images/train  
+val: images/val

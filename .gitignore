@@ -1,0 +1,58 @@
+# ----------------------------------------------------------------------
+# 1. PYTHON ENVIRONMENT AND BUILD FILES
+# ----------------------------------------------------------------------
+# Virtual Environment Folder (CRITICAL)
+venv/
+.venv/
+
+# Bytecode, build, and installer files
+__pycache__/
+*.pyc
+*.pyd
+*.so
+
+# Installer debris
+dist/
+build/
+*.egg-info/
+
+
+# ----------------------------------------------------------------------
+# 2. DATA AND MODEL ARTIFACTS (Stored in Cloud/Local Cache)
+# ----------------------------------------------------------------------
+# Raw Data and extracted files (ROADWork data)
+data/
+*.csv
+*.zip
+*.rar
+*.mp4
+*.mkv
+*.avi
+*.txt   # Ignore raw data logs/paths, but keep README.txt
+
+# Model Artifacts
+models/
+*.pt        # PyTorch model weights (YOLOv8)
+*.pth       # PyTorch checkpoints
+*.pkl       # Scikit-learn/XGBoost pickled models (CRITICAL)
+*.joblib
+runs/       # YOLOv8 output logs/images
+
+
+# ----------------------------------------------------------------------
+# 3. CLOUD AND SECURITY (Crucial for Cloud Transition)
+# ----------------------------------------------------------------------
+# Local credentials (Never commit security keys!)
+credentials/
+config.json
+.aws/
+.google/
+
+# Jupyter/IDE Files
+.ipynb_checkpoints
+.vscode/
+.idea/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
