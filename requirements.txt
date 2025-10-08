@@ -73,6 +73,7 @@ smmap==5.0.2
 streamlit==1.50.0
 sympy==1.14.0
 tenacity==9.1.2
+tensorflow
 threadpoolctl==3.6.0
 toml==0.10.2
 torch==2.8.0
