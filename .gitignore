@@ -29,6 +29,7 @@ data/
 *.mkv
 *.avi
 *.txt   # Ignore raw data logs/paths, but keep README.txt
+explore_concords.py
 
 # Model Artifacts
 models/
@@ -42,7 +43,7 @@ runs/       # YOLOv8 output logs/images
 # ----------------------------------------------------------------------
 # 3. CLOUD AND SECURITY (Crucial for Cloud Transition)
 # ----------------------------------------------------------------------
-# Local credentials (Never commit security keys!)
+# Local credentials
 credentials/
 config.json
 .aws/

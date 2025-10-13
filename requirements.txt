@@ -28,10 +28,12 @@ google-crc32c==1.7.1
 google-resumable-media==2.7.2
 googleapis-common-protos==1.70.0
 idna==3.10
+imbalanced-learn
 Jinja2==3.1.6
 joblib==1.5.2
 jsonschema==4.25.1
 jsonschema-specifications==2025.9.1
+keras-tcn
 kiwisolver==1.4.9
 MarkupSafe==3.0.3
 matplotlib==3.10.6
@@ -78,6 +80,7 @@ toml==0.10.2
 torch==2.8.0
 torchvision==0.23.0
 tornado==6.5.2
+tqdm
 typing_extensions==4.15.0
 tzdata==2025.2
 ultralytics==8.3.204
