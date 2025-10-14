@@ -24,7 +24,8 @@ def create_target_variable(df):
     print(f"Creating target variable (Y)...")
     lead_frames = int(PREDICTION_LEAD_TIME_S * FRAME_RATE)
     df['immediate_risk'] = (df['rel_distance'] <= RISK_DISTANCE_THRESHOLD).astype(int)
-    df['Y_risk_in_future'] = df['immediate_risk'].rolling(window=lead_frames, min_periods=1).max().shift(-lead_frames).fillna(0)
+    # This groupby is crucial for the master dataset to prevent windows from crossing between events
+    df['Y_risk_in_future'] = df.groupby(['trackId_vuln', 'trackId_car'])['immediate_risk'].rolling(window=lead_frames, min_periods=1).max().shift(-lead_frames).fillna(0).reset_index(level=[0,1], drop=True)
     return df
 
 def main():
@@ -32,7 +33,7 @@ def main():
     print("--- STEP 4d (ALL-IN): Random Forest Tuning with SMOTE and Advanced Features ---")
     
     if not os.path.exists(ADVANCED_FEATURES_CSV):
-        print(f"ERROR: Advanced features file not found. Run '3_feature_eng.py' first.")
+        print(f"ERROR: Advanced features file not found. Run '5_build_master_dataset.py' first.")
         return
         
     print(f"Loading advanced feature set from '{ADVANCED_FEATURES_CSV}'...")
@@ -54,7 +55,6 @@ def main():
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     precision_scores, recall_scores, f1_scores = [], [], []
 
-    # NEW: Hyperparameter grid for RandomizedSearchCV for Random Forest
     param_grid = {
         'n_estimators': [100, 200, 300, 400],
         'max_depth': [5, 10, 15, None],
@@ -62,6 +62,8 @@ def main():
         'min_samples_leaf': [1, 2, 4],
         'max_features': ['sqrt', 'log2']
     }
+    
+    best_params_from_cv = {}
 
     for fold, (train_index, test_index) in enumerate(kf.split(X, Y)):
         print(f"\n--- FOLD {fold + 1}/5 ---")
@@ -73,13 +75,13 @@ def main():
         X_train_resampled, Y_train_resampled = smote.fit_resample(X_train, Y_train)
 
         print("Running RandomizedSearchCV for hyperparameters...")
-        # NEW: Using RandomForestClassifier
         rf = RandomForestClassifier(random_state=42, class_weight='balanced')
         random_search = RandomizedSearchCV(rf, param_distributions=param_grid, n_iter=20, cv=3, scoring='f1', random_state=42, n_jobs=-1, verbose=1)
         random_search.fit(X_train_resampled, Y_train_resampled)
         
         best_model = random_search.best_estimator_
-        print(f"Best params for this fold: {random_search.best_params_}")
+        best_params_from_cv = random_search.best_params_
+        print(f"Best params for this fold: {best_params_from_cv}")
 
         preds = best_model.predict(X_test)
         p_score = precision_score(Y_test, preds, zero_division=0)
@@ -93,6 +95,23 @@ def main():
     print(f"Average Precision: {np.mean(precision_scores):.4f} (+/- {np.std(precision_scores):.4f})")
     print(f"Average Recall:    {np.mean(recall_scores):.4f} (+/- {np.std(recall_scores):.4f})")
     print(f"Average F1-Score:  {np.mean(f1_scores):.4f} (+/- {np.std(f1_scores):.4f})")
+    
+    # Final model training and saving
+    print("\nTraining final TUNED Random Forest model on all data for deployment...")
+    
+    # Re-sample the entire dataset for final training
+    X_resampled_full, Y_resampled_full = SMOTE(random_state=42).fit_resample(X, Y)
+    
+    # Use the best parameters found during the last fold of CV as a good starting point
+    final_model = RandomForestClassifier(random_state=42, class_weight='balanced', **best_params_from_cv)
+    final_model.fit(X_resampled_full, Y_resampled_full)
+
+    os.makedirs(os.path.dirname(OUTPUT_MODEL_PATH), exist_ok=True)
+    joblib.dump(final_model, OUTPUT_MODEL_PATH)
+    
+    print("\n✅ Final Tuned Random Forest model training complete!")
+    print(f"Model saved to '{OUTPUT_MODEL_PATH}'")
+    print(f"Using final parameters: {best_params_from_cv}")
 
 if __name__ == "__main__":
     main()

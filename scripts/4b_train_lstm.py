@@ -12,145 +12,44 @@ from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 import time
 
 # --- CONFIGURATION ---
-TOP_EVENTS_CSV = "data/analysis_results/top_20_predictive_events.csv"
-OUTPUT_DIR = "data/analysis_results"
-ROOT_DIRECTORY = "C:/DS24/Site_Sentinel/data/raw/CONCOR-D/3W_SidStP_Trajectory"
-OUTPUT_MODEL_PATH = "models/lstm_risk_predictor_tuned.keras"
+# UPDATED: Point to the new master dataset
+MASTER_FEATURES_CSV = "data/analysis_results/master_training_dataset.csv"
+OUTPUT_MODEL_PATH = "models/lstm_master_predictor_tuned.keras"
 
 # --- MODEL PARAMETERS ---
 RISK_DISTANCE_THRESHOLD = 2.0
 PREDICTION_LEAD_TIME_S = 4.0
 FRAME_RATE = 25
-SELECTED_EVENT_RANK = 1
 
 # --- LSTM-SPECIFIC PARAMETERS ---
-SEQUENCE_LENGTH = 25
+SEQUENCE_LENGTH = 25 
 EPOCHS = 20
 BATCH_SIZE = 32
 # ---------------------
-
-def final_parser_v5(filepath):
-    """
-    The definitive parser for CONCOR-D CSV files.
-    """
-    all_rows = []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        header = f.readline()
-        for line in f:
-            line = line.strip()
-            if not line: continue
-            try:
-                parts = line.split(';', 12)
-                if len(parts) < 13: continue
-                meta_parts, trajectory_blob = parts[:12], parts[12]
-                track_id, object_type = int(meta_parts[0]), meta_parts[1].strip()
-                trajectory_points = trajectory_blob.split(';')
-                for i in range(0, len(trajectory_points), 7):
-                    chunk = trajectory_points[i:i + 7]
-                    if len(chunk) == 7:
-                        all_rows.append({
-                            'trackId': track_id, 'class': object_type, 'x': float(chunk[0]),
-                            'y': float(chunk[1]), 'time': float(chunk[5])
-                        })
-            except (ValueError, IndexError):
-                continue
-    return pd.DataFrame(all_rows)
-
-def calculate_motion_features(df):
-    """
-    Calculates velocity and acceleration for each object track.
-    """
-    print("Calculating motion features...")
-    df = df.sort_values(by=['trackId', 'time']).reset_index(drop=True)
-    
-    df['delta_t'] = df.groupby('trackId')['time'].diff()
-    df['delta_x'] = df.groupby('trackId')['x'].diff()
-    df['delta_y'] = df.groupby('trackId')['y'].diff()
-    
-    df['velocity_x'] = (df['delta_x'] / df['delta_t']).replace([np.inf, -np.inf], 0).fillna(0)
-    df['velocity_y'] = (df['delta_y'] / df['delta_t']).replace([np.inf, -np.inf], 0).fillna(0)
-    df['speed_ms'] = np.sqrt(df['velocity_x']**2 + df['velocity_y']**2)
-    
-    df['delta_speed'] = df.groupby('trackId')['speed_ms'].diff()
-    df['accel_ms2'] = (df['delta_speed'] / df['delta_t']).replace([np.inf, -np.inf], 0).fillna(0)
-    
-    final_cols = ['time', 'trackId', 'class', 'x', 'y', 'velocity_x', 'velocity_y', 'speed_ms', 'accel_ms2']
-    return df[final_cols]
-
-def calculate_advanced_features(df, target_actors):
-    """
-    Calculates relative features (distance, speed) and Time-to-Collision (TTC).
-    """
-    print("Calculating relative and advanced features (TTC)...")
-    vulnerable_df = df[df['trackId'] == target_actors['vulnerable_id']].copy()
-    car_df = df[df['trackId'] == target_actors['car_id']].copy()
-
-    merged_df = pd.merge(vulnerable_df, car_df, on='time', suffixes=('_vuln', '_car'), how='outer')
-    merged_df = merged_df.sort_values('time').ffill().dropna()
-
-    merged_df['rel_distance'] = np.sqrt((merged_df['x_vuln'] - merged_df['x_car'])**2 + (merged_df['y_vuln'] - merged_df['y_car'])**2)
-    merged_df['rel_speed'] = np.sqrt((merged_df['velocity_x_vuln'] - merged_df['velocity_x_car'])**2 + (merged_df['velocity_y_vuln'] - merged_df['velocity_y_car'])**2)
-
-    delta_x = merged_df['x_car'] - merged_df['x_vuln']
-    delta_y = merged_df['y_car'] - merged_df['y_vuln']
-    delta_vx = merged_df['velocity_x_car'] - merged_df['velocity_x_vuln']
-    delta_vy = merged_df['velocity_y_car'] - merged_df['velocity_y_vuln']
-
-    dot_product_dv_dv = delta_vx**2 + delta_vy**2
-    dot_product_dx_dv = delta_x * delta_vx + delta_y * delta_vy
-    dot_product_dv_dv = dot_product_dv_dv.replace(0, np.nan)
-
-    ttc = -dot_product_dx_dv / dot_product_dv_dv
-    merged_df['ttc'] = ttc.where(ttc > 0, np.nan).fillna(100)
-
-    return merged_df
 
 def create_target_variable(df):
     """Creates the predictive target variable (Y)."""
     print(f"Creating target variable (Y)...")
     lead_frames = int(PREDICTION_LEAD_TIME_S * FRAME_RATE)
     df['immediate_risk'] = (df['rel_distance'] <= RISK_DISTANCE_THRESHOLD).astype(int)
-    df['Y_risk_in_future'] = df['immediate_risk'].rolling(window=lead_frames, min_periods=1).max().shift(-lead_frames).fillna(0)
+    
+    # UPDATED: Group by both actors to handle multiple events in the master file
+    df['Y_risk_in_future'] = df.groupby(['trackId_vuln', 'trackId_car'])['immediate_risk'].rolling(window=lead_frames, min_periods=1).max().shift(-lead_frames).fillna(0).reset_index(level=[0,1], drop=True)
+    
     return df
 
 def main():
-    """Main function to orchestrate the LSTM model training and cross-validation process."""
-    print("--- STEP 4b (ALL-IN): LSTM Training with Data Scaling & Advanced Features ---")
+    """Main function to orchestrate the LSTM model training on the master dataset."""
+    print("--- STEP 4b (ALL-IN): LSTM Training on Master Dataset ---")
     
-    top_events = pd.read_csv(TOP_EVENTS_CSV)
-    selected_event_info = top_events.iloc[SELECTED_EVENT_RANK]
-    
-    filename_parts = selected_event_info['file'].split('_')
-    date_time_folder = f"{filename_parts[0]}_{filename_parts[1]}"
-    source_csv_path = os.path.join(ROOT_DIRECTORY, date_time_folder, selected_event_info['file'])
-    
-    # Define paths
-    base_name = os.path.splitext(selected_event_info['file'])[0]
-    features_filename = f"features_{base_name}.csv"
-    features_path = os.path.join(OUTPUT_DIR, features_filename)
-    advanced_features_filename = f"advanced_features_{base_name}.csv"
-    advanced_features_path = os.path.join(OUTPUT_DIR, advanced_features_filename)
+    if not os.path.exists(MASTER_FEATURES_CSV):
+        print(f"ERROR: Master dataset file not found at '{MASTER_FEATURES_CSV}'. Please run script 5 first.")
+        return
 
-    if not os.path.exists(advanced_features_path):
-        print(f"Advanced feature file not found. Generating it now...")
-        if not os.path.exists(features_path):
-            print(f"Base feature file not found. Parsing and creating it...")
-            clean_df = final_parser_v5(source_csv_path)
-            features_df = calculate_motion_features(clean_df)
-            features_df.to_csv(features_path, index=False)
-        else:
-            print(f"Loading base features from '{features_path}'...")
-            features_df = pd.read_csv(features_path)
-        
-        target_actors = {'vulnerable_id': selected_event_info['trackId_vulnerable'], 'car_id': selected_event_info['trackId_car']}
-        advanced_df = calculate_advanced_features(features_df, target_actors)
-        advanced_df.to_csv(advanced_features_path, index=False)
-        print(f"   -> Advanced features saved to '{advanced_features_path}'")
-    else:
-        print(f"Loading existing advanced feature set from '{advanced_features_path}'...")
-        advanced_df = pd.read_csv(advanced_features_path)
-
-    model_df = create_target_variable(advanced_df)
+    print(f"Loading master feature set from '{MASTER_FEATURES_CSV}'...")
+    model_df = pd.read_csv(MASTER_FEATURES_CSV)
+    
+    model_df = create_target_variable(model_df)
     
     features_to_use = ['rel_distance', 'rel_speed', 'speed_ms_vuln', 'speed_ms_car', 'accel_ms2_vuln', 'accel_ms2_car', 'ttc']
     X_data = model_df[features_to_use].fillna(100)
@@ -181,7 +80,9 @@ def main():
         
         Y_test_actual = Y_test_fold.iloc[SEQUENCE_LENGTH:]
 
-        if len(Y_test_actual) == 0: continue
+        if len(Y_test_actual) == 0:
+            print("  -> Test set is too small for this sequence length. Skipping fold.")
+            continue
 
         model = Sequential([
             LSTM(units=64, activation='tanh', input_shape=(SEQUENCE_LENGTH, len(features_to_use)), return_sequences=True),
@@ -205,10 +106,30 @@ def main():
         precision_scores.append(p_score); recall_scores.append(r_score); f1_scores.append(f1)
         print(f"Fold {fold + 1} -> Precision: {p_score:.4f}, Recall: {r_score:.4f}, F1-Score: {f1:.4f}")
 
-    print("\n--- LSTM Cross-Validation Results Summary ---")
+    print("\n--- LSTM (Master) Cross-Validation Results Summary ---")
     print(f"Average Precision: {np.mean(precision_scores):.4f} (+/- {np.std(precision_scores):.4f})")
     print(f"Average Recall:    {np.mean(recall_scores):.4f} (+/- {np.std(recall_scores):.4f})")
     print(f"Average F1-Score:  {np.mean(f1_scores):.4f} (+/- {np.std(f1_scores):.4f})")
+    
+    print("\nTraining final LSTM model on all data for deployment...")
+    scaler_final = MinMaxScaler()
+    X_scaled_full = scaler_final.fit_transform(X_data)
+    full_generator = TimeseriesGenerator(X_scaled_full, Y_data.to_numpy(), length=SEQUENCE_LENGTH, batch_size=BATCH_SIZE)
+    
+    final_model = Sequential([
+        LSTM(units=64, activation='tanh', input_shape=(SEQUENCE_LENGTH, len(features_to_use)), return_sequences=True),
+        Dropout(0.3),
+        LSTM(units=32, activation='tanh'),
+        Dropout(0.3),
+        Dense(units=1, activation='sigmoid')
+    ])
+    final_model.compile(optimizer='adam', loss='binary_crossentropy')
+    final_model.fit(full_generator, epochs=EPOCHS, verbose=1, class_weight=class_weight, shuffle=False)
+    
+    os.makedirs(os.path.dirname(OUTPUT_MODEL_PATH), exist_ok=True)
+    final_model.save(OUTPUT_MODEL_PATH)
+    
+    print(f"\n✅ Final LSTM model saved to '{OUTPUT_MODEL_PATH}'")
 
 if __name__ == "__main__":
     main()
