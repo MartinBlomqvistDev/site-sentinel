@@ -38,6 +38,7 @@ models/
 *.pkl       # Scikit-learn/XGBoost pickled models (CRITICAL)
 *.joblib
 runs/       # YOLOv8 output logs/images
+outputs/
 
 
 # ----------------------------------------------------------------------

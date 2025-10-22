@@ -1,71 +1,135 @@
-# 🔥 SITE SENTINEL: Predictive Safety for Construction Zones
+# SITE SENTINEL: Predictive Safety for Construction Zones
 
 **Slogan:** The Intelligent Watchdog for Construction Zones.
 
 ---
-### 🏷️ Keywords & Hashtags
+### Keywords & Hashtags
 
-#MachineLearning #ComputerVision #PredictiveAnalytics #XGBoost #YOLOv8 #SiteSafety #TrafficMonitoring #SoloDeveloper #Streamlit #TTC
+`#MachineLearning` `#ComputerVision` `#PredictiveAnalytics` `#RandomForest` `#XGBoost` `#LSTM` `#TCN` `#ModelSelection` `#SiteSafety` `#TrafficMonitoring` `#SoloDeveloper` `#Streamlit` `#Time-Series`
 
 ---
 
-### 💡 Project Summary & Impact
+### Project Summary & Impact
 
 **Site Sentinel** is a full-stack, AI-driven monitoring system designed to solve a critical, high-value safety problem: **preventing vehicle-personnel Near-Miss events in high-speed roadside construction areas.**
 
-**My core achievement** was moving the system beyond passive surveillance by implementing a custom **Predictive Analytics Engine (XGBoost)** that forecasts risk up to **4.0 seconds in advance**. This provides crucial lead time for intervention, significantly reducing liability and enhancing worker safety.
+The core achievement was architecting a robust model evaluation pipeline to identify the optimal algorithm for this task. After competitively training multiple models, a final **Dual-Lead Random Forest** classifier was selected. It forecasts immediate risk based on TTC and preventive risk **4.0 seconds in advance** based on future proximity. This provides a significant lead time for intervention, drastically reducing liability and enhancing worker safety.
 
-As a solo developer, **I owned the entire ML lifecycle**, from cloud data ingestion and custom feature engineering to real-time dashboard deployment.
+As a solo developer, **I owned the entire ML lifecycle**, from building a master training dataset across all available data to feature engineering, comparative model training, and final visualization.
+
+---
+### Project Structure
+
+```
+site-sentinel/
+│
+├── data/
+│   ├── raw/                          # Raw CONCOR-D trajectory CSVs
+│   └── analysis_results/
+│       ├── top_20_dynamic_events.csv # List of highest-risk events found
+│       └── master_training_dataset_full.csv # Unified dataset for training
+│
+├── models/
+│   └── rf_master_predictor_dual_lead_tuned.pkl # Final serialized model
+│
+├── scripts/
+│   ├── 2b_find_best_dynamic_event.py # Scans all data to find high-risk events
+│   ├── 3_feature_eng.py              # Engineers features for a single event
+│   ├── 4a_train_xgboost.py           # Trains XGBoost model (comparative)
+│   ├── 4b_train_lstm.py              # Trains LSTM model (comparative)
+│   ├── 4c_train_tcn.py               # Trains TCN model (comparative)
+│   ├── 4d_train_randomforest.py      # ✅ Trains the final selected RF model
+│   ├── 5_build_master_dataset.py     # Builds the master training dataset
+│   └── 6_render_video.py             # Renders demo video with predictions
+│
+└── README.md
+```
 
 ---
 
-### ✨ The Core Innovation: Predictive Decision Support
+### End-to-End Pipeline
 
-I engineered this project to showcase expertise in creating robust, proactive systems. The predictability relies on three components:
-
-| Feature | Technical Achievement | Value for Safety |
+| Stage | Script(s) | Purpose |
 | :--- | :--- | :--- |
-| **Target Definition (P30)** | **I defined** the target event (Y=1) as a vehicle/worker entering a **5.0-meter safety perimeter** within **4.0 seconds**. | Provides maximum human reaction time for safe intervention. |
-| **Feature Engineering (P31)** | **I built** custom features, including **Time-to-Collision (TTC)** and **Relative Velocity**. This vector analysis ensures the model relies on motion, not just distance, preventing false alarms from stationary workers. | Proves ability to create intelligent features that filter out noise and identify true high-risk scenarios. |
-| **Model (P32)** | **I trained** an XGBoost Classifier from scratch, utilizing `scale_pos_weight` to manage severe class imbalance (few risky frames vs. many safe frames). | Ensures the risk alerts are trustworthy (high Precision) and minimizes system distraction. |
+| **1. Event Identification** | `2b_find_best_dynamic_event.py` | Scans all raw CSVs to auto-detect and rank the most dynamically dangerous interaction events based on a physics-driven risk score. |
+| **2. Master Dataset Creation**| `5_build_master_dataset.py` | Processes **all 100+ raw trajectory files**, auto-detects actors, calculates motion and interaction features, and builds a single, unified master training dataset. |
+| **3. Comparative Training**| `4a` to `4c` | Trains and evaluates multiple baseline models (XGBoost, LSTM, TCN) on the master dataset to establish performance benchmarks. |
+| **4. Final Model Training**| `4d_train_randomforest.py` | Trains, tunes, and cross-validates the final **Dual-Lead Random Forest** model on the full master dataset using SMOTE for class imbalance. |
+| **5. Visualization** | `6_render_video.py` | Loads the trained production model and overlays its risk predictions onto the source video for a final polished demonstration. |
 
 ---
 
-### 🛠️ System Architecture & Solo Expertise
+### Core Innovation: From Heuristics to a Selected Model
 
-The application is structured as a professional, scalable ML production pipeline.
+This project showcases a professional, data-driven approach to model selection. The final predictive engine is the result of a multi-stage refinement process.
 
-**Pipeline Flow:**
-**Data Source (GCS)** $\rightarrow$ **Detection (YOLOv8)** $\rightarrow$ **Tracking (MOT)** $\rightarrow$ **Feature Engineering (TTC/Pandas)** $\rightarrow$ **Prediction (XGBoost)** $\rightarrow$ **Visualization (Streamlit)**
+| Stage | Technical Achievement | Value & Rationale |
+| :--- | :--- | :--- |
+| **1. Heuristic Risk Scoring** | Developed a physics-based risk score combining relative distance, approach speed, and vehicle speed to automatically find the best training data. | This initial step created a non-ML baseline and a robust method for automatically identifying the most dynamically interesting events for later training. |
+| **2. Scalable Feature Engineering** | Built an automated pipeline (`5_build_master_dataset.py`) to process **all raw data files** into a single, unified master training dataset. | This demonstrates the ability to scale from a single-event prototype to a robust model trained on comprehensive, diverse interaction scenarios. |
+| **3. Competitive Model Evaluation** | Trained and cross-validated four distinct model architectures: XGBoost, Random Forest, LSTM, and TCN. | This proves a deep understanding of the ML landscape, from classic tree-based models to advanced deep learning architectures for time-series data. |
+| **4. The Dual-Risk System**| Engineered the selected Random Forest model with a unique **dual-target system**: one for *preventive* risk (future proximity) and one for *standard* risk (immediate TTC). | This nuanced approach provides a more complete safety picture, capturing both slowly developing threats and sudden dangers. |
 
-| Category | Skills Demonstrated (I) |
+---
+
+### Model Selection & Performance
+
+The **Dual-Lead Random Forest** was selected as the production model. It offered the best balance of **predictive performance (high F1-Score)** and **interpretability**. Its dual-target structure aligns perfectly with the project's goal of providing both early warnings and immediate alerts, making it the most functionally valuable for a real-world safety application.
+
+#### Final Model Performance
+
+The model was validated using 5-fold stratified cross-validation. **Precision** is prioritized as it is critical that every alert is credible to avoid "alarm fatigue" in a safety-critical system.
+
+| Metric (Preventive Risk) | Result | Goal & Interpretation |
+| :--- | :--- | :--- |
+| **Precision** | **0.875** | **(CRITICAL METRIC)** Measures how often a "future risk" alarm is correct. A high score proves the system is trustworthy. |
+| **Recall** | **0.986** | Measures how many real risk events the model successfully identified in advance. |
+| **F1-Score** | **0.927** | Harmonic mean of Precision and Recall, showing a balanced model. |
+
+---
+### Features & Target Variables
+
+The models are trained on a rich set of kinematic and interaction features.
+
+| Feature | Description |
 | :--- | :--- |
-| **Computer Vision** | **Transfer Learning (YOLOv8 Fine-Tuning):** Adapting state-of-the-art models to niche domain objects (workers/machinery). |
-| **Tracking & Data** | **Multi-Object Tracking (MOT):** Utilizing ByteTrack/DeepSORT for consistent ID assignment crucial for accurate trajectory analysis. |
-| **Cloud & Infra** | **Cloud Storage (GCS):** Configuration, authentication, and management of large data artifacts for scalability. |
-| **Frontend/App** | **Streamlit:** Developing a modular, real-time interactive dashboard (V40-V43) as a final deployment layer. |
+| `rel_distance`, `rel_speed` | Instantaneous relative distance and speed between actors. |
+| `approach_speed` | The closing velocity between actors (rate at which the gap is shrinking). |
+| `ttc` | Time-to-Collision, a classic safety metric. |
+| `speed_ms_vuln`, `speed_ms_car` | Absolute speeds of each actor. |
+| `accel_ms2_vuln`, `accel_ms2_car`| Absolute acceleration of each actor. |
+| `*_avg_2s` | Features smoothed over a 2-second rolling window for stability. |
+
+#### Dual-Lead Target Variables
+
+The final model predicts two distinct targets:
+* **`Y_standard`**: An immediate risk flag, active if `ttc <= 2.0` seconds.
+* **`Y_preventive`**: A future risk flag, active if the actors are predicted to be within a `2.0m` distance threshold **4.0 seconds in the future**.
 
 ---
 
-### 📈 Model Performance (P33)
+### Usage
 
-*Note: Update this table with your actual results after running the P33 evaluation.*
-
-The model was validated on an **unseen test set** (30% of the demo clip) to ensure strong generalization. Precision is prioritized in safety-critical applications.
-
-| Metric | Result | Goal & Interpretation |
-| :--- | :--- | :--- |
-| **Precision** | [0.XX] | **(CRITICAL METRIC)** Measures how often an alarm is correct. A high score proves the "Watchdog" is trustworthy. |
-| **Recall** | [0.XX] | Measures how many real risk events the model successfully identified. |
-| **F1-Score** | [0.XX] | Harmonic mean of Precision and Recall. |
+1.  **Generate Master Dataset:**
+    ```bash
+    python scripts/5_build_master_dataset.py
+    ```
+2.  **Train Final Model:**
+    ```bash
+    python scripts/4d_train_randomforest.py
+    ```
+3.  **Render Demo Video:**
+    ```bash
+    python scripts/6_render_video.py
+    ```
 
 ---
 
-### 🎬 Demo & Contact
+### Demo & Contact
 
 *Note: Insert a live video or image here once available.*
 
-**I am ready for a role in Machine Learning Engineering/Data Science.**
+**I am ready for a role in Machine Learning Engineering/Data Science, especially in areas involving predictive analysis on time-series or sensor data.**
 
 * Project Repository: [**https://github.com/MartinBlomqvistDev/site-sentinel**]
 * LinkedIn: [**https://www.linkedin.com/in/martin-blomqvist**]
