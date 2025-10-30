@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from . import gcs_utils
+import gcs_utils
 
 PROJECT_SLOGAN = "Predictive Safety for Construction Zones"
 
