@@ -150,3 +150,32 @@ Open to roles in Machine Learning Engineering, Data Science, Computer Vision, an
 ## Keywords
 
 `#MachineLearning` `#ComputerVision` `#RandomForest` `#XGBoost` `#LSTM` `#TCN` `#ModelSelection` `#PredictiveAnalytics` `#ConstructionSafety` `#TimeSeries` `#Streamlit` `#SoloDeveloper` `#FullStack` `#Python` `#OpenCV` `#SafetyCriticalSystems`
+
+---
+
+## Reflection & Critical Review
+
+### Model Choice & Motivation
+
+- Multiple architectures were evaluated: XGBoost, Random Forest, LSTM, and TCN.
+- The final choice was Random Forest, motivated by its strong interpretability, robust performance, and suitability for safety-critical environments, where clear explanations for alerts are required.
+- The selection was based on both quantitative metrics (precision, recall, F1-score) and qualitative needs (ease of explaining predictions to end-users).
+
+### Application of Previous Knowledge
+
+- The project applies concepts from earlier courses, including data ingestion, feature engineering, machine learning, model selection, and deployment.
+- The pipeline structure and coding practices reflect a foundation built through previous coursework and projects.
+
+### Agile Process
+
+- The project was developed iteratively, with regular feedback and continuous improvement.
+- Tasks were managed in phases: data preparation, feature engineering, model experimentation, and deployment.
+- Adjustments and refinements were made based on model outcomes and evaluation results.
+
+### Critical Assessment
+
+- **Strengths:** The model achieved high recall and balanced precision, making it suitable for real-world deployment with minimal false alarms.
+- **Limitations:** Further improvements could be made by increasing the dataset size and exploring additional feature engineering or model architectures.
+- **Agility:** Iterative development allowed for rapid identification and resolution of bottlenecks, especially in data parsing and feature engineering.
+
+---
