@@ -1,12 +1,10 @@
 import streamlit as st
 import os
-import gcs_utils
 
 PROJECT_SLOGAN = "Predictive Safety for Construction Zones"
 
-LOCAL_VIDEO_PATH = "data/analysis_results/final_demo_worker_centric_risk_90sec_v10.mp4"
-GCS_VIDEO_BLOB_NAME = "output/final_demo_worker_centric_risk_90sec_v10.mp4"
-USE_GCS_FOR_VIDEO = True
+# Use public GCS URL for video
+VIDEO_URL = "https://storage.googleapis.com/site-sentinel-roadwork-data/output/final_demo_smooth_v15_web.mp4"
 
 st.set_page_config(
     page_title="Site Sentinel",
@@ -26,35 +24,9 @@ def show_dashboard_page():
     """, unsafe_allow_html=True)
     
     st.markdown('<div class="video-section">', unsafe_allow_html=True)
-    
-    video_bytes = None
-    video_load_error = None
-
-    if USE_GCS_FOR_VIDEO:
-        if gcs_utils.check_gcs_connection():
-            with st.spinner("Loading video..."):
-                video_bytes = gcs_utils.download_bytes_from_gcs(GCS_VIDEO_BLOB_NAME)
-                if video_bytes is None:
-                    video_load_error = "Failed to load video from GCS"
-        else:
-            video_load_error = "GCS connection unavailable"
-    else:
-        if os.path.exists(LOCAL_VIDEO_PATH):
-            try:
-                with open(LOCAL_VIDEO_PATH, 'rb') as video_file:
-                    video_bytes = video_file.read()
-            except Exception as e:
-                video_load_error = str(e)
-        else:
-            video_load_error = "Video not found"
-
-    if video_bytes:
-        st.markdown('<div class="video-container">', unsafe_allow_html=True)
-        st.video(video_bytes)
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.error(f"Video unavailable: {video_load_error}")
-    
+    st.markdown('<div class="video-container">', unsafe_allow_html=True)
+    st.video(VIDEO_URL)
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('<h2 class="section-header">Model Performance</h2>', unsafe_allow_html=True)
@@ -89,7 +61,7 @@ def show_dashboard_page():
     
     st.markdown("""
     <div class="text-block">
-    Vehicle-worker near-miss incidents are a leading cause of injury in roadside construction. Workers have limited visibility of approaching vehicles, and drivers often can't see workers in blind spots.
+    Vehicle-worker near-miss incidents are a leading cause of injury in roadside construction. Workers have limited visibility of approaching vehicles, and drivers often can't see workers in blind spots or through equipment.
     </div>
     """, unsafe_allow_html=True)
     
@@ -106,7 +78,7 @@ def show_dashboard_page():
     
     st.markdown("""
     <div class="text-block">
-    I built a system that processes video in real-time to predict vehicle-worker collisions. It combines computer vision, physics-based feature engineering, and a machine learning model to identify hazards before they happen.
+    I built a system that processes video in real-time to predict vehicle-worker collisions. It combines computer vision, physics-based feature engineering, and a machine learning model to identify dangerous situations before they escalate.
     </div>
     """, unsafe_allow_html=True)
     
@@ -139,7 +111,7 @@ def show_dashboard_page():
         
         **Why Random Forest?**
         
-        I tested four different model architectures. Random Forest came out ahead because of its F1-Score and interpretability — critical in safety systems where people need to understand why an alert fires.
+        I tested four different model architectures. Random Forest came out ahead because of its F1-Score and interpretability — critical in safety systems where people need to understand why an alert was triggered.
         
         **Two Risk Predictions**
         
@@ -192,7 +164,7 @@ def show_dashboard_page():
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("")  # Add spacing here
+    st.markdown("")
     
     col_skill1, col_skill2, col_skill3 = st.columns(3)
     
