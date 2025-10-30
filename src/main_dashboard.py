@@ -4,8 +4,8 @@ import gcs_utils
 
 PROJECT_SLOGAN = "Predictive Safety for Construction Zones"
 
-LOCAL_VIDEO_PATH = "data/analysis_results/final_demo_worker_centric_risk_90sec_v10.mp4"
-GCS_VIDEO_BLOB_NAME = "output/final_demo_worker_centric_risk_90sec_v10.mp4"
+LOCAL_VIDEO_PATH = "data/analysis_results/final_demo_smooth_v15.mp4"
+GCS_VIDEO_BLOB_NAME = "output/final_demo_smooth_v15.mp4"
 USE_GCS_FOR_VIDEO = True
 
 st.set_page_config(
