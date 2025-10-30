@@ -38,7 +38,9 @@ models/
 *.pkl       # Scikit-learn/XGBoost pickled models (CRITICAL)
 *.joblib
 runs/       # YOLOv8 output logs/images
-outputs/
+
+outputs/    # General output folder for processed data
+.outputs/   # Also ignore hidden outputs folder
 
 
 # ----------------------------------------------------------------------
@@ -49,6 +51,9 @@ credentials/
 config.json
 .aws/
 .google/
+
+# Streamlit secrets (contains sensitive data)
+.streamlit/secrets.toml
 
 # Jupyter/IDE Files
 .ipynb_checkpoints

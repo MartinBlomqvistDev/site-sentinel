@@ -1,69 +1,238 @@
-# src/main_dashboard.py (The Live Demo Page)
-
 import streamlit as st
-import pandas as pd
-import numpy as np
-# Import necessary ML artifacts (Placeholder for V43 integration)
-# import joblib
-# from ultralytics import YOLO
+import os
+import gcs_utils
 
-PROJECT_SLOGAN = "The Intelligent Watchdog for Construction Zones."
+PROJECT_SLOGAN = "Predictive Safety for Construction Zones"
+
+LOCAL_VIDEO_PATH = "data/analysis_results/final_demo_worker_centric_risk_90sec_v10.mp4"
+GCS_VIDEO_BLOB_NAME = "output/final_demo_worker_centric_risk_90sec_v10.mp4"
+USE_GCS_FOR_VIDEO = True
+
+st.set_page_config(
+    page_title="Site Sentinel",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 def show_dashboard_page():
-    """Renders the main real-time surveillance dashboard."""
     
-    # Display the header unique to this page
-    st.title("Site Sentinel")
-    st.subheader(PROJECT_SLOGAN)
-    st.markdown("---")
+    st.markdown("""
+    <div class="title-block">
+        <div class="main-title">Site Sentinel</div>
+        <div class="main-subtitle">Predictive Safety for Construction Zones</div>
+        <div class="tag">Solo Developer | Full-Stack ML</div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    st.header("Active Surveillance Dashboard")
+    st.markdown('<div class="video-section">', unsafe_allow_html=True)
+    
+    video_bytes = None
+    video_load_error = None
 
-    # --- Top Row: Risk Indicator and Key Metrics ---
-    col1, col2, col3, col4 = st.columns([1.5, 1, 1, 1])
+    if USE_GCS_FOR_VIDEO:
+        if gcs_utils.check_gcs_connection():
+            with st.spinner("Loading video..."):
+                video_bytes = gcs_utils.download_bytes_from_gcs(GCS_VIDEO_BLOB_NAME)
+                if video_bytes is None:
+                    video_load_error = "Failed to load video from GCS"
+        else:
+            video_load_error = "GCS connection unavailable"
+    else:
+        if os.path.exists(LOCAL_VIDEO_PATH):
+            try:
+                with open(LOCAL_VIDEO_PATH, 'rb') as video_file:
+                    video_bytes = video_file.read()
+            except Exception as e:
+                video_load_error = str(e)
+        else:
+            video_load_error = "Video not found"
 
+    if video_bytes:
+        st.markdown('<div class="video-container">', unsafe_allow_html=True)
+        st.video(video_bytes)
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.error(f"Video unavailable: {video_load_error}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<h2 class="section-header">Model Performance</h2>', unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
     with col1:
-        st.subheader("Near-Miss Risk Status")
-        # **RISK INDICATOR Placeholder (V43)** - Static for now, dynamic later
-        st.markdown(
-            f"""
-            <div style="background-color: #008000; padding: 20px; border-radius: 10px; text-align: center; color: white;">
-                <h2>STATUS: SAFE</h2>
-                <h3>Risk Score: 0.15 (LOW)</h3>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-
+        st.markdown("""
+        <div class="column-item">
+            <div class="column-label">Precision</div>
+            <div class="column-value">0.875</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col2:
-        st.metric(label="Total Objects Tracked", value="15", delta="^ 3 since last frame")
-        st.metric(label="Frames Processed (FPS)", value="28.5", delta_color="normal")
-        
+        st.markdown("""
+        <div class="column-item">
+            <div class="column-label">Recall</div>
+            <div class="column-value">0.986</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col3:
-        st.metric(label="Personnel Count", value="4", delta="0")
-        st.metric(label="Vehicle Hazard Count", value="11", delta="^ 3")
+        st.markdown("""
+        <div class="column-item">
+            <div class="column-label">F1-Score</div>
+            <div class="column-value">0.927</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown('<h2 class="section-header">The Problem</h2>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="text-block">
+    Vehicle-worker near-miss incidents are a leading cause of injury in roadside construction. Workers have limited visibility of approaching vehicles, and drivers often can't see workers in blind spots.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="highlight">
+        <div class="highlight-title">The Opportunity</div>
+        <div class="highlight-text">
+        Can we predict when a collision is likely to occur before it happens? With a 4-second lead time, there's enough time to warn workers and prevent injury.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<h2 class="section-header">The Solution</h2>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="text-block">
+    I built a system that processes video in real-time to predict vehicle-worker collisions. It combines computer vision, physics-based feature engineering, and a machine learning model to identify hazards before they happen.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["My Approach", "The Model", "Results"])
+    
+    with tab1:
+        st.markdown("""
+        #### What I Built
         
-    with col4:
-        st.metric(label="Average Vehicle Speed", value="65 km/h", delta="-5 km/h")
-        st.metric(label="Mean TTC (Hazard Zone)", value="9.2 sec", delta="v 1.1 sec")
-
-
-    st.markdown("---")
-
-    # --- Middle Row: Video and Data Visualization ---
-    col_video, col_chart = st.columns([3, 2])
-
-    with col_video:
-        st.subheader("Live Video Feed & Tracking")
-        # **VIDEO FEED Placeholder (V41)** - Will be replaced by live video loop
-        st.image("https://via.placeholder.com/800x450.png?text=SITE+SENTINEL+VIDEO+FEED+LOADS+HERE", 
-                 caption="Live feed showing Bounding Boxes and Trajectories")
-
-    with col_chart:
-        st.subheader("Flow and Density Metrics")
-        # **CHART Placeholder (V42)**
-        chart_data = pd.DataFrame(
-           np.random.randn(20, 3),
-           columns=['TTC_mean', 'Density', 'Alerts'])
-
-        st.line_chart(chart_data)
+        **End-to-End Pipeline** — Working as a solo developer, I handled every stage:
+        
+        1. **Data Parsing** — Custom parser for complex trajectory files (DFS format)
+        2. **Automatic Calibration** — Aligned real-world coordinates to video pixels using homography and dynamic rotation
+        3. **Feature Engineering** — Extracted velocity, acceleration, distance, approach speed, time-to-collision
+        4. **Model Training** — Trained and compared XGBoost, Random Forest, LSTM, and TCN
+        5. **Visualization** — Real-time rendering with worker-focused risk display
+        6. **Deployment** — Streamlit app with Google Cloud Storage integration
+        
+        #### Key Decisions
+        
+        - **Random Forest** instead of LSTM/TCN for interpretability in a safety-critical context
+        - **Dual-target system**: immediate risk (TTC ≤ 2s) plus future risk (4 seconds ahead)
+        - **SMOTE resampling** to handle class imbalance in the training data
+        - **5-fold stratified cross-validation** to validate the model properly
+        """)
+    
+    with tab2:
+        st.markdown("""
+        #### Random Forest Model
+        
+        **Why Random Forest?**
+        
+        I tested four different model architectures. Random Forest came out ahead because of its F1-Score and interpretability — critical in safety systems where people need to understand why an alert fires.
+        
+        **Two Risk Predictions**
+        
+        - **Immediate Risk**: Is a collision happening right now? (TTC ≤ 2.0 seconds)
+        - **Preventive Risk**: Will a worker enter a danger zone in the next 4 seconds? (early warning)
+        
+        **Features** — 11 engineered per frame:
+        
+        - Relative distance and speed between vehicle and worker
+        - Time-to-Collision (TTC)
+        - Vehicle and worker velocity and acceleration
+        - 2-second rolling averages for stability
+        - Predicted future proximity
+        
+        **Training Details**
+        
+        - SMOTE resampling for class balance
+        - Stratified 5-fold cross-validation
+        - Hyperparameter tuning via RandomizedSearchCV
+        - Optimized for F1-Score as the primary metric
+        """)
+    
+    with tab3:
+        st.markdown("""
+        #### Performance & Impact
+        
+        **Preventive Risk Model**
+        
+        - **Precision: 0.875** — When the system alerts, it's correct 87.5% of the time
+        - **Recall: 0.986** — Catches 98.6% of real near-miss events
+        - **F1-Score: 0.927** — Good balance between precision and recall
+        
+        **What This Means**
+        
+        The system identifies almost all real hazards while keeping false alarms low. With a 4-second lead time, workers have time to get out of danger.
+        
+        **Real-World Numbers**
+        
+        - Runs at 60 FPS on standard hardware
+        - Trained on 100+ trajectory files with diverse scenarios
+        - Handles multi-worker, multi-vehicle interactions
+        - Fully extensible for live feeds and drone systems
+        """)
+    
+    st.markdown('<h2 class="section-header">Why This Matters</h2>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="text-block">
+    This project shows I can take a real safety problem, turn it into a data problem, build a complete solution, and ship it. Here's what it demonstrates:
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("")  # Add spacing here
+    
+    col_skill1, col_skill2, col_skill3 = st.columns(3)
+    
+    with col_skill1:
+        st.markdown("""
+        <div class="skill-box">
+            <div class="skill-label">Problem Framing</div>
+            <div class="skill-text">
+            Took a safety challenge and formulated it as a prediction problem with clear metrics and business value.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_skill2:
+        st.markdown("""
+        <div class="skill-box">
+            <div class="skill-label">Full-Stack Execution</div>
+            <div class="skill-text">
+            Owned the entire pipeline: parsing, feature engineering, model training, validation, and deployment.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_skill3:
+        st.markdown("""
+        <div class="skill-box">
+            <div class="skill-label">Model Selection</div>
+            <div class="skill-text">
+            Tested multiple approaches and selected the best model for the specific job and context.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="footer">
+        <p>Martin Blomqvist | Data Scientist | Solo Developer</p>
+        <p>
+        <a href="https://github.com/MartinBlomqvistDev/site-sentinel" target="_blank">GitHub</a> | 
+        <a href="https://www.linkedin.com/in/martin-blomqvist" target="_blank">LinkedIn</a> | 
+        <a href="mailto:cm.blomqvist@gmail.com">Email</a>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
