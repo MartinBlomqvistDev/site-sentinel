@@ -1,9 +1,5 @@
 # SITE SENTINEL: Predictive Safety for Construction Zones
 
-**Predictive Safety for Construction Zones**
-
----
-
 ## Overview
 
 **Site Sentinel** is a full-stack, AI-driven monitoring system to prevent vehicle-personnel near-miss events in high-speed roadside construction.  
