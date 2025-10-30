@@ -4,7 +4,7 @@ import os
 PROJECT_SLOGAN = "Predictive Safety for Construction Zones"
 
 # Use public GCS URL for video
-VIDEO_URL = "https://storage.googleapis.com/site-sentinel-roadwork-data/output/final_demo_smooth_v15.mp4"
+VIDEO_URL = "https://storage.googleapis.com/site-sentinel-roadwork-data/output/final_demo_smooth_v15_web.mp4"
 
 st.set_page_config(
     page_title="Site Sentinel",
