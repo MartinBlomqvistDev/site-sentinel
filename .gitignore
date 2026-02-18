@@ -17,6 +17,7 @@ build/
 # 2. DATA AND MODEL ARTIFACTS (local only, too large for git)
 # ----------------------------------------------------------------------
 data/
+!site_sentinel/data/
 models/
 *.csv
 *.zip
