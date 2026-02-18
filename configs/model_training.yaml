@@ -1,0 +1,86 @@
+# Model training configuration.
+# Used by all scripts in pipeline/03* and pipeline/04*.
+
+# The 11 engineered features fed to every model
+features:
+  columns:
+    - rel_distance          # Euclidean distance between worker and vehicle (m)
+    - rel_speed             # Magnitude of relative velocity vector (m/s)
+    - speed_ms_vuln         # Worker speed (m/s)
+    - speed_ms_car          # Vehicle speed (m/s)
+    - accel_ms2_vuln        # Worker acceleration (m/s²)
+    - accel_ms2_car         # Vehicle acceleration (m/s²)
+    - ttc                   # Time-to-collision assuming constant velocities (s); 100 if diverging
+    - approach_speed        # Rate of gap closure — positive means converging (m/s)
+    - rel_dist_avg_2s       # 2-second rolling mean of rel_distance
+    - rel_speed_avg_2s      # 2-second rolling mean of rel_speed
+    - future_rel_dist_avg_2s # 2-second rolling mean of projected future distance
+
+targets:
+  standard_ttc_threshold_s: 2.0    # Y_standard = 1 when TTC ≤ this (immediate danger label)
+  preventive_lead_time_s: 4.0      # Y_preventive = 1 if danger will arrive within this window
+
+data:
+  master_csv: "data/analysis_results/master_training_dataset_full.csv"
+
+cross_validation:
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+
+smote:
+  random_state: 42
+
+# --- Random Forest (the deployed model) ---
+random_forest:
+  output_model: "models/rf_master_predictor_dual_lead_tuned.pkl"
+  search:
+    n_iter: 20
+    cv: 3
+    scoring: "f1"
+    random_state: 42
+  param_grid:
+    n_estimators: [100, 200, 300, 400]
+    max_depth: [5, 10, 15, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
+    max_features: ["sqrt", "log2"]
+
+# --- XGBoost (comparison baseline) ---
+xgboost:
+  output_model: "models/xgb_risk_predictor_tuned.pkl"
+  frame_rate: 29.97
+  search:
+    n_iter: 20
+    cv: 3
+    scoring: "f1"
+    random_state: 42
+  param_grid:
+    n_estimators: [100, 200, 300, 400]
+    max_depth: [3, 5, 7, 9]
+    learning_rate: [0.01, 0.05, 0.1, 0.2]
+    subsample: [0.7, 0.8, 0.9, 1.0]
+    colsample_bytree: [0.7, 0.8, 0.9, 1.0]
+
+# --- LSTM (comparison baseline) ---
+lstm:
+  output_model: "models/lstm_master_predictor_tuned.keras"
+  sequence_length: 25
+  epochs: 20
+  batch_size: 32
+  architecture:
+    units: [64, 32]
+    dropout: 0.3
+
+# --- TCN (comparison baseline) ---
+tcn:
+  output_model: "models/tcn_master_predictor_tuned.keras"
+  sequence_length: 25
+  epochs: 15
+  batch_size: 32
+  architecture:
+    nb_filters: 64
+    kernel_size: 3
+    dilations: [1, 2, 4, 8]
+    use_skip_connections: true
+    dropout_rate: 0.2

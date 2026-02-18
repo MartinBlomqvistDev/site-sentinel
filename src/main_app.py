@@ -1,372 +1,420 @@
+"""
+Site Sentinel — Streamlit application entry point.
+
+Run locally with:
+    streamlit run src/main_app.py
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
 import streamlit as st
-from main_dashboard import show_dashboard_page 
-from about_page import show_about_page 
-import gcs_utils
 
-PROJECT_TITLE = "Site Sentinel"
+# Make the project root importable so site_sentinel.* works regardless of
+# what directory streamlit is launched from.
+_PROJECT_ROOT = Path(__file__).parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
 
-def set_page_config():
-    st.set_page_config(
-        page_title=PROJECT_TITLE,
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
+from dashboard import show_dashboard_page  # noqa: E402
+from about import show_about_page  # noqa: E402
+from site_sentinel.config import load_config  # noqa: E402
 
-def main():
-    set_page_config()
-    
-    # GLOBAL CSS - loaded once and stays for the entire session
-    st.markdown("""
-    <style>
-        * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-        
-        body {
-            background-color: #0a0a0a;
-            color: #ffffff;
+_cfg = load_config("app")
+_author = _cfg["author"]
+_project = _cfg["project"]
+
+
+def _inject_css() -> None:
+    st.markdown(
+        """
+        <style>
+        :root {
+            --bg:           #f8fafc;
+            --surface:      #ffffff;
+            --surface-up:   #f1f5f9;
+            --border:       #e2e8f0;
+            --accent:       #0284c7;
+            --accent-hover: #0369a1;
+            --accent-light: #e0f2fe;
+            --text:         #0f172a;
+            --text-muted:   #475569;
+            --text-faint:   #94a3b8;
         }
-        
+
+        /* ---- Layout ---- */
         .block-container {
-            max-width: 900px !important;
+            max-width: 860px !important;
             margin: 0 auto !important;
-            padding-top: 2rem !important;
+            padding-top: 1.75rem !important;
             padding-left: 2rem !important;
             padding-right: 2rem !important;
-            background-color: #0a0a0a;
         }
-        
-        [data-testid="stAppViewContainer"] {
-            background-color: #0a0a0a;
+
+        [data-testid="stAppViewContainer"] { background-color: var(--bg); }
+        [data-testid="stSidebarNav"]       { display: none; }
+        [data-testid="stSidebar"]          { display: none; }
+
+        /* ---- Typography ---- */
+        * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+        h4 {
+            color: var(--text);
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
         }
-        
-        .title-block {
-            margin-bottom: 4rem;
+
+        p  { color: var(--text-muted); line-height: 1.7; }
+        ul { color: var(--text-muted); }
+        li { margin-bottom: 0.4rem; }
+        a  { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; color: var(--accent-hover); }
+
+        /* ---- Hero block ---- */
+        .hero {
             text-align: center;
+            padding: 2.5rem 0 2rem;
+            margin-bottom: 2rem;
         }
-        
-        .main-title {
-            font-size: 3rem;
-            font-weight: 700;
+
+        .hero-title {
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -1.5px;
             margin: 0;
-            padding: 0;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, #ff8c00 0%, #ffaa33 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            line-height: 1.1;
         }
-        
-        .main-subtitle {
-            font-size: 1rem;
-            color: #cccccc;
-            margin-top: 0.5rem;
+
+        .hero-title span { color: var(--accent); }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            margin-top: 0.6rem;
             font-weight: 400;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
         }
-        
+
+        .hero-tag {
+            display: inline-block;
+            background: var(--accent-light);
+            color: var(--accent);
+            border: 1px solid #bae6fd;
+            padding: 0.3rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-top: 1rem;
+            letter-spacing: 0.3px;
+        }
+
+        /* ---- Page title (About page) ---- */
         .page-title {
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -1px;
             margin: 0;
-            background: linear-gradient(135deg, #ff8c00 0%, #ffaa33 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
-        
+
         .page-subtitle {
             font-size: 0.95rem;
-            color: #999999;
+            color: var(--text-muted);
             margin-top: 0.5rem;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
         }
-        
-        .tag {
-            display: inline-block;
-            background: rgba(255, 140, 0, 0.1);
-            border: 1px solid #ff8c00;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            color: #ff8c00;
-            margin-top: 1rem;
-        }
-        
-        .video-section {
-            margin: 3rem 0;
-        }
-        
-        .video-container {
-            background: #1a1a1a;
-            border: 1px solid #ff8c00;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
+
+        /* ---- Section header ---- */
         .section-header {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-top: 4rem;
-            margin-bottom: 3rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #ff8c00;
-            color: #ffffff;
-        }
-        
-        .text-block {
-            font-size: 1rem;
-            line-height: 1.7;
-            color: #dddddd;
-            margin-bottom: 1.5rem;
-        }
-        
-        .highlight {
-            background: rgba(255, 140, 0, 0.05);
-            border-left: 4px solid #ff8c00;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            border-radius: 4px;
-        }
-        
-        .highlight-title {
-            font-weight: 600;
-            color: #ff8c00;
-            margin-bottom: 0.75rem;
-        }
-        
-        .highlight-text {
-            color: #dddddd;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        .highlight-box {
-            background: rgba(255, 140, 0, 0.05);
-            border-left: 4px solid #ff8c00;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            border-radius: 4px;
-        }
-        
-        .column-item {
-            padding: 1.5rem;
-            background: #1a1a1a;
-            border: 1px solid #ff8c00;
-            border-radius: 6px;
-            text-align: center;
-        }
-        
-        .column-label {
-            font-size: 0.9rem;
-            color: #ff8c00;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
-        }
-        
-        .column-value {
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--text);
+            margin-top: 3rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid var(--accent);
         }
-        
-        /* Skills boxes - good height */
-        .skill-box {
+
+        /* ---- Cards ---- */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 1.5rem;
-            background: #1a1a1a;
-            border: 1px solid #ff8c00;
-            border-radius: 6px;
-            min-height: 180px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        /* Metric card — left accent stripe */
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .metric-label {
+            font-size: 0.78rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.4rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+
+        /* Skill / tech cards */
+        .skill-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.4rem;
+            min-height: 10rem;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s ease;
         }
-        
+
+        .skill-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
         .skill-label {
-            font-size: 0.9rem;
-            color: #ff8c00;
-            font-weight: 500;
+            font-size: 0.78rem;
+            color: var(--accent);
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 1rem;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.75rem;
         }
-        
+
         .skill-text {
-            color: #dddddd;
+            color: var(--text-muted);
             font-size: 0.9rem;
             line-height: 1.6;
             flex-grow: 1;
         }
-        
-        .skill-card {
-            background: #1a1a1a;
-            border: 1px solid #ff8c00;
-            border-radius: 6px;
-            padding: 1.5rem;
+
+        /* Tech stack cards (About page) */
+        .tech-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        
-        .skill-name {
-            font-weight: 600;
-            color: #ff8c00;
-            margin-bottom: 0.5rem;
+
+        .tech-name {
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
         }
-        
-        .skill-desc {
-            color: #999999;
-            font-size: 0.9rem;
+
+        .tech-desc {
+            color: var(--text-faint);
+            font-size: 0.85rem;
             line-height: 1.5;
         }
-        
-        .achievement-item {
-            background: #1a1a1a;
-            border: 1px solid #ff8c00;
-            border-radius: 6px;
-            padding: 1.5rem;
+
+        /* Achievement / timeline items */
+        .achievement {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
             margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
-        
+
         .achievement-title {
-            font-weight: 600;
-            color: #ff8c00;
-            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
         }
-        
+
         .achievement-text {
-            color: #dddddd;
+            color: var(--text-muted);
             font-size: 0.9rem;
             line-height: 1.6;
         }
-        
+
+        /* Callout block */
+        .callout {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--accent-hover);
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .callout-text {
+            color: var(--text);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        /* General text block */
+        .text-block {
+            font-size: 1rem;
+            line-height: 1.75;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        /* Video container */
+        .video-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+            margin: 1.5rem 0 2rem;
+        }
+
+        /* ---- Navigation ---- */
+        .nav-active > button {
+            background-color: var(--accent) !important;
+            color: #ffffff !important;
+            border-color: var(--accent) !important;
+        }
+
+        .stButton > button {
+            background-color: var(--surface) !important;
+            border: 1.5px solid var(--border) !important;
+            color: var(--text-muted) !important;
+            border-radius: 8px !important;
+            padding: 0.6rem 1.25rem !important;
+            font-weight: 500 !important;
+            font-size: 0.9rem !important;
+            transition: all 0.15s ease !important;
+        }
+
+        .stButton > button:hover {
+            border-color: var(--accent) !important;
+            color: var(--accent) !important;
+        }
+
+        /* ---- Tabs ---- */
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border);
+            gap: 0.25rem;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            color: var(--text-faint);
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            font-size: 0.92rem;
+            background: transparent;
+        }
+
+        .stTabs [aria-selected="true"] {
+            color: var(--accent) !important;
+            border-bottom: 2px solid var(--accent) !important;
+            background: transparent !important;
+        }
+
+        /* ---- Footer ---- */
         .footer {
             text-align: center;
             margin-top: 4rem;
-            padding-top: 2rem;
-            border-top: 1px solid #333333;
-            color: #666666;
-            font-size: 0.85rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-faint);
+            font-size: 0.82rem;
+            line-height: 1.8;
         }
-        
-        .contact-links {
-            text-align: center;
-            margin: 2rem 0;
-        }
-        
-        .contact-links a {
-            display: inline-block;
-            margin: 0 1rem;
-            color: #ff8c00;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .contact-links a:hover {
-            text-decoration: underline;
-            color: #ffaa33;
-        }
-        
-        /* Streamlit tabs */
-        .stTabs [data-baseweb="tab-list"] {
-            background-color: transparent;
-            border-bottom: 1px solid #333333;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            color: #999999;
-            font-weight: 500;
-            padding: 1rem 1rem;
-            font-size: 0.95rem;
-        }
-        
-        .stTabs [aria-selected="true"] {
-            color: #ff8c00;
-            border-bottom: 2px solid #ff8c00;
-        }
-        
-        /* Streamlit buttons */
-        .stButton > button {
-            background-color: #1a1a1a !important;
-            border: 1px solid #ff8c00 !important;
-            color: #ff8c00 !important;
-            border-radius: 6px !important;
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 500 !important;
-            font-size: 0.95rem !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        .stButton > button:hover {
-            background-color: rgba(255, 140, 0, 0.1) !important;
-            border-color: #ffaa33 !important;
-            color: #ffaa33 !important;
-        }
-        
-        /* Typography */
-        h4 {
-            color: #ffffff;
-            font-size: 1.2rem;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-        
-        p {
-            color: #dddddd;
-            line-height: 1.7;
-        }
-        
-        ul {
-            color: #dddddd;
-        }
-        
-        li {
-            margin-bottom: 0.5rem;
-        }
-        
-        a {
-            color: #ff8c00;
-            text-decoration: none;
-        }
-        
-        a:hover {
-            text-decoration: underline;
-            color: #ffaa33;
-        }
-        
-        /* Hide sidebar */
-        [data-testid="stSidebarNav"] { display: none; }
-        [data-testid="stSidebar"] { display: none; }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Initialize session state
-    if 'page' not in st.session_state:
-        st.session_state.page = 'dashboard'
-    
-    # Simple navigation buttons
-    btn1, btn2 = st.columns([1, 1], gap="small")
-    
-    with btn1:
+
+        .footer a { color: var(--text-faint); }
+        .footer a:hover { color: var(--accent); }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_footer() -> None:
+    st.markdown(
+        f"""
+        <div class="footer">
+            <p>{_author['name']} &nbsp;·&nbsp; {_author['role']}</p>
+            <p>
+                <a href="{_author['github']}" target="_blank">GitHub</a>
+                &nbsp;&nbsp;·&nbsp;&nbsp;
+                <a href="{_author['linkedin']}" target="_blank">LinkedIn</a>
+                &nbsp;&nbsp;·&nbsp;&nbsp;
+                <a href="mailto:{_author['email']}">{_author['email']}</a>
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def main() -> None:
+    st.set_page_config(
+        page_title=_project["title"],
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
+
+    _inject_css()
+
+    if "page" not in st.session_state:
+        st.session_state.page = "dashboard"
+
+    # Navigation — compact buttons on the left, rest of the row is empty
+    nav_dash, nav_about, _ = st.columns([1, 1, 4])
+
+    with nav_dash:
+        if st.session_state.page == "dashboard":
+            st.markdown('<div class="nav-active">', unsafe_allow_html=True)
         if st.button("Dashboard", use_container_width=True, key="btn_dashboard"):
-            st.session_state.page = 'dashboard'
-    
-    with btn2:
+            st.session_state.page = "dashboard"
+            st.rerun()
+        if st.session_state.page == "dashboard":
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    with nav_about:
+        if st.session_state.page == "about":
+            st.markdown('<div class="nav-active">', unsafe_allow_html=True)
         if st.button("About", use_container_width=True, key="btn_about"):
-            st.session_state.page = 'about'
-    
-    # Add spacing
-    st.markdown("")
-    
-    # Render the selected page
-    if st.session_state.page == 'dashboard':
-        show_dashboard_page()
-    elif st.session_state.page == 'about':
-        show_about_page()
+            st.session_state.page = "about"
+            st.rerun()
+        if st.session_state.page == "about":
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    if st.session_state.page == "dashboard":
+        show_dashboard_page(_render_footer)
     else:
-        show_dashboard_page()
+        show_about_page(_render_footer)
+
 
 if __name__ == "__main__":
     main()
