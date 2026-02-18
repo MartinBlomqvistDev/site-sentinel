@@ -31,4 +31,4 @@ model_performance:
   rolling_window_s: 2.0           # Rolling average window used in feature engineering
 
 video:
-  public_url: "https://storage.googleapis.com/site-sentinel-roadwork-data/output/final_demo_smooth_v15_web.mp4"
+  public_url: "https://youtu.be/3FAOE39YhRw"
