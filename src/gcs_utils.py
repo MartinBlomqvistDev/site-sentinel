@@ -20,7 +20,6 @@ Required secret structure (in .streamlit/secrets.toml or Streamlit Cloud):
 
 from __future__ import annotations
 
-import io
 import json
 import logging
 import os
