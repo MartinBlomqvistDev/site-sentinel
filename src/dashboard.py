@@ -116,7 +116,7 @@ def show_dashboard_page(render_footer: Callable[[], None]) -> None:
 
             Raw trajectory CSV files go in, risk-annotated video comes out.
 
-            1. **Parse** — custom parser for the DFS Viewer format used by CONCOR-D.
+            1. **Parse** — custom parser for the DFS Viewer trajectory format.
                Each row is one tracked object with a flattened time-series blob,
                not standard CSV.
             2. **Calibrate** — camera-to-world alignment from RANSAC homography,
@@ -188,7 +188,7 @@ def show_dashboard_page(render_footer: Callable[[], None]) -> None:
             #### What the demo shows
 
             The video runs the {_perf['prediction_lead_time_s']:.0f}-second preventive model on
-            a real near-miss event from the CONCOR-D dataset. Bounding boxes cycle
+            a real near-miss event from the ListDB dataset. Bounding boxes cycle
             green (safe) → orange (approaching) → red (imminent) with a 15-frame
             smoothing window. The "WARNING" overlay appears {_perf['prediction_lead_time_s']:.0f}
             seconds before the actual closest-approach moment.

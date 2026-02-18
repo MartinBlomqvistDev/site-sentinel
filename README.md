@@ -9,18 +9,18 @@ Real-time near-miss prediction for road construction zones.
 
 ---
 
-Construction workers and vehicles share tight spaces, often with poor sightlines on both sides.
-Existing safety systems tell you something happened; Site Sentinel tells you something is about
-to. Given two seconds of trajectory data, it predicts whether a near-miss will occur in the
-next four — early enough for someone to step aside.
+Vehicles and pedestrians share the same space with limited time to react. Existing safety
+systems tell you something happened; Site Sentinel tells you something is about to. Given two
+seconds of trajectory data, it predicts whether a near-miss will occur in the next four —
+early enough for someone to act.
 
 It catches **98.6% of real dangerous events** at 87.5% precision (F1 = 0.927, 5-fold CV)
-across 129 annotated sessions from a real German road construction site.
+across 129 annotated sessions from the ListDB aerial traffic dataset (TU Dresden).
 
 ---
 
-- **Ingests** overhead camera trajectory data from the CONCOR-D dataset (129 annotated
-  sessions of real construction site footage from Germany)
+- **Ingests** aerial trajectory data from the ListDB dataset (129 annotated sessions,
+  TU Dresden)
 - **Engineers** 11 kinematic and interaction features per (vehicle, worker) pair per frame:
   relative distance, time-to-collision, approach speed, projected future distance, rolling averages
 - **Trains** a dual-target Random Forest predicting both immediate danger (TTC ≤ 2s) and
@@ -33,16 +33,21 @@ across 129 annotated sessions from a real German road construction site.
 
 ## Dataset
 
-CONCOR-D (Construction CORridor Dataset) is an open research dataset of overhead camera
-footage from a German road construction site. Each session is annotated by the DFS Viewer
-software, which produces trajectory CSVs where each row is one tracked object with a
-semicolon-delimited blob of 7-value timestep groups
+**ListDB** (Leverage information on street traffic) is an open aerial traffic dataset from
+TU Dresden. Video was captured with GoPro and DJI Action 2 cameras and processed using
+DataFromSky TrafficSurvey, an AI video analytics service that extracts per-object trajectories
+from aerial footage. Each session is exported as a trajectory CSV where each row is one tracked
+object with a semicolon-delimited blob of 7-value timestep groups
 (UTM x/y, speed, tangential acceleration, lateral acceleration, timestamp, heading).
 
-The dataset spans three seasons and contains 129 annotated sessions covering both
-construction vehicles (cars, trucks, heavy machinery) and workers (pedestrians and cyclists).
+The dataset contains 129 annotated sessions covering vehicles and pedestrians at street level.
 Near-miss events are rare — roughly 2-5% of all frames — which creates severe class imbalance
 that SMOTE addresses during training.
+
+> Bäumler, M., Lehmann, M., Prokop, G. (2023). "Generating representative test scenarios:
+> The FUSE4Rep process model to collect and analyse traffic observation data."
+> 27th ESV Conference, Yokohama. Paper No. 23-0122-O.
+> Dataset published under CC BY-NC 4.0.
 
 ---
 
@@ -142,15 +147,16 @@ Site_Sentinel/
 
 ## Honest limitations
 
-The dataset covers three seasons at one German road construction site. The model has not seen:
+The model is trained on general street traffic (ListDB), not footage specific to road
+construction zones. It has not seen:
 
-- Winter conditions (reduced visibility, different vehicle behaviour on ice)
-- Multilane highways or urban construction zones
-- Occlusion — a worker behind a truck, invisible to the camera
+- Construction site conditions — narrow corridors, heavy machinery, workers in high-vis gear
+- Winter conditions (reduced visibility, different vehicle behaviour)
+- Occlusion — a pedestrian behind a vehicle, invisible to the aerial camera
 
-Generalising to a new site would require retraining. The homography calibration is
-site-specific: the pixel-UTM correspondences are embedded in the DFS Viewer export for
-that particular camera setup and location.
+The homography calibration is session-specific: pixel-UTM correspondences are tied to a
+particular camera position. Applying the system to a new location requires recalibration
+and likely retraining.
 
 ---
 
