@@ -1,9 +1,9 @@
 [theme]
-primaryColor = "#ff8c00"
-backgroundColor = "#0a0a0a"
-secondaryBackgroundColor = "#1a1a1a"
-textColor = "#ffffff"
-font = "sans serif"
+primaryColor              = "#0284c7"
+backgroundColor           = "#f8fafc"
+secondaryBackgroundColor  = "#f1f5f9"
+textColor                 = "#0f172a"
+font                      = "sans serif"
 
 [client]
 showErrorDetails = false
@@ -12,4 +12,4 @@ showErrorDetails = false
 level = "info"
 
 [server]
-maxUploadSize = 500
+# maxUploadSize left at default (200 MB) — the app does not accept user uploads

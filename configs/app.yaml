@@ -1,0 +1,34 @@
+# Streamlit app configuration.
+# The app reads all display text, metrics, and links from here.
+# Update this file when model metrics change — no need to touch source code.
+
+author:
+  name: "Martin Blomqvist"
+  role: "Data Scientist"
+  github: "https://github.com/MartinBlomqvistDev/site-sentinel"
+  linkedin: "https://www.linkedin.com/in/martin-blomqvist"
+  email: "cm.blomqvist@gmail.com"
+
+project:
+  title: "Site Sentinel"
+  subtitle: "Predictive Safety for Road Construction Zones"
+  tagline: "Four seconds of warning. Enough time to step aside."
+  year: 2025
+
+# Reported performance of the deployed dual-target Random Forest model.
+# These numbers come from 5-fold stratified cross-validation on the full master dataset.
+model_performance:
+  precision: 0.875       # Of all alerts raised, 87.5% were genuine near-misses
+  recall: 0.986          # The system caught 98.6% of actual dangerous events
+  f1_score: 0.927        # Harmonic mean of precision and recall
+  model_type: "Random Forest"
+  targets: "dual (preventive + immediate)"
+  prediction_lead_time_s: 4.0     # How far ahead the preventive target looks
+  ttc_threshold_s: 2.0            # TTC below this triggers the immediate danger label
+  cv_folds: 5
+  feature_count: 11
+  training_sessions: 129          # Number of annotated sessions in the master dataset
+  rolling_window_s: 2.0           # Rolling average window used in feature engineering
+
+video:
+  public_url: "https://storage.googleapis.com/site-sentinel-roadwork-data/output/final_demo_smooth_v15_web.mp4"

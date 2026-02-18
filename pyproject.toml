@@ -1,0 +1,32 @@
+[project]
+name = "site-sentinel"
+version = "0.1.0"
+description = "Predictive near-miss detection for roadside construction zones"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (undefined names, unused imports)
+    "I",   # isort
+    "UP",  # pyupgrade (modernise syntax)
+    "B",   # flake8-bugbear (likely bugs and design issues)
+    "W",   # pycodestyle warnings
+]
+ignore = [
+    "E501",  # line too long — ruff format handles this
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["site_sentinel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
