@@ -8,8 +8,8 @@ and the tech stack.
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import streamlit as st
 

@@ -18,8 +18,8 @@ _PROJECT_ROOT = Path(__file__).parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from dashboard import show_dashboard_page  # noqa: E402
 from about import show_about_page  # noqa: E402
+from dashboard import show_dashboard_page  # noqa: E402
 from site_sentinel.config import load_config  # noqa: E402
 
 _cfg = load_config("app")

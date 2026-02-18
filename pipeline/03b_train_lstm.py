@@ -27,7 +27,7 @@ import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.layers import Dense, Dropout, LSTM
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 
