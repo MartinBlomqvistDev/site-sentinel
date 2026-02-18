@@ -112,7 +112,7 @@ def parse_trajectory_csv(path: Path | str) -> pd.DataFrame:
                         "track_id": track_id,
                         "object_class": object_class,
                     }
-                    row.update(dict(zip(_TIMESTEP_FIELDS, map(float, group))))
+                    row.update(dict(zip(_TIMESTEP_FIELDS, map(float, group), strict=True)))
                     records.append(row)
                 except ValueError:
                     logger.debug(
