@@ -7,12 +7,10 @@ so that expected feature outputs are trivial to compute by hand.
 
 from __future__ import annotations
 
-from io import StringIO
 from pathlib import Path
 
 import pandas as pd
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Tiny trajectory DataFrame (parser output shape)

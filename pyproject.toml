@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = ["scripts/", "notebooks/", "outputs/"]
 
 [tool.ruff.lint]
 select = [

@@ -5,8 +5,8 @@ Dashboard page — the main landing page of the Site Sentinel app.
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import streamlit as st
 
