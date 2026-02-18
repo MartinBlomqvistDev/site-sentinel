@@ -1,0 +1,67 @@
+# Pipeline configuration for the Site Sentinel ML pipeline.
+# All scripts in pipeline/ read their settings from here — no hardcoded paths or magic numbers.
+
+data:
+  raw_trajectory_dir: "data/raw/CONCOR-D/3W_SidStP_Trajectory"
+  analysis_results_dir: "data/analysis_results"
+  full_trajectory_csv: "data/full_trajectories_PIXELS.csv"   # includes pixel annotations
+
+processing:
+  # DFS Viewer trajectory CSV format constants
+  frame_rate: 29.97        # Source video frame rate (Hz)
+  csv_metadata_cols: 12    # Number of header columns before the trajectory blob
+  csv_column_stride: 7     # Number of values per timestep in the trajectory blob
+                           # Order: x_utm, y_utm, speed, tan_acc, lat_acc, timestamp, heading
+
+  # Prediction horizon
+  time_horizon_s: 4.0      # How far ahead to project future positions for the preventive label
+
+  # Rolling average windows
+  rolling_window_s: 2.0    # Window length for smoothed distance/speed features
+
+  # Object class names as they appear in the raw annotation files
+  vehicle_class: "car"
+  vulnerable_class: "pedestrian"
+
+events:
+  # Settings for 01_find_events.py
+  top_n: 20                        # How many events to keep in the ranked output
+  min_session_time_s: 30.0         # Skip the first N seconds of each session (setup noise)
+  approach_speed_cap: 20.0         # Cap approach speed before scoring (m/s)
+  vehicle_speed_cap: 20.0          # Cap vehicle speed before scoring (m/s)
+  risk_weight_directional: 0.6     # Weight for direction-based risk component
+  risk_weight_proximity: 0.4       # Weight for proximity-based risk component
+  output_csv: "data/analysis_results/top_events.csv"
+
+video:
+  source_path: "data/raw/20190918_1500_Sid_StP_3W_d_1_3_cal.mp4"
+  trajectory_csv_path: "data/full_trajectories_PIXELS.csv"
+  homography_path: "data/analysis_results/homography_matrix.npy"
+  transform_params_path: "data/analysis_results/transform_params.json"
+  output_path: "data/analysis_results/final_demo_v16.mp4"
+
+  renderer:
+    # Temporal smoothing: average risk over the last N frames to suppress flicker
+    risk_history_window: 15
+
+    # Pixel radius around a worker's future position — vehicles entering this bubble
+    # trigger the "safety bubble intrusion" warning regardless of model score
+    safety_bubble_radius_px: 50
+
+    # Composite risk score weights (must sum to 1.0)
+    ai_model_weight: 0.80       # Random Forest predicted probability
+    proximity_weight: 0.10      # 1 / (distance + 0.1) * exp(-distance / decay)
+    preventive_weight: 0.10     # 1 / future_relative_distance
+
+    # Proximity score exponential decay constant (metres)
+    proximity_decay_constant: 10.0
+
+    # State machine thresholds
+    approaching_enter_threshold: 0.50   # SAFE → APPROACHING when risk exceeds this
+    approaching_exit_threshold: 0.40    # APPROACHING → SAFE when risk drops below this
+    imminent_enter_threshold: 0.85      # smoothed risk needed to reach IMMINENT
+    imminent_exit_threshold: 0.65       # IMMINENT → APPROACHING when risk drops below this
+    imminent_frame_count: 10            # consecutive high-risk frames needed to enter IMMINENT
+
+    # Approach speed gate: vehicles not actively closing in are capped at approaching_enter_threshold
+    approach_speed_gate: 0.5    # m/s — below this, vehicle is not considered approaching
