@@ -1,14 +1,13 @@
 # Architecture
 
-Site Sentinel is a full-stack ML system for predicting vehicle-worker near-misses
-at road construction zones. This document describes the data flow from raw footage
-to live web app.
+Site Sentinel is a full-stack ML system for predicting vehicle-pedestrian near-misses.
+This document describes the data flow from raw trajectory data to live web app.
 
 ## Pipeline overview
 
 ```
-CONCOR-D Dataset
-(129 annotated CSVs)
+ListDB Dataset
+(129 annotated CSVs, TU Dresden)
         │
         ▼
 pipeline/01_find_events.py

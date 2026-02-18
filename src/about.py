@@ -41,15 +41,15 @@ def show_about_page(render_footer: Callable[[], None]) -> None:
     st.markdown(
         f"""
         <div class="text-block">
-        Site Sentinel started with {_perf['training_sessions']} annotated traffic sessions
-        recorded at a German road construction site — real vehicles, real workers,
-        real near-misses. The dataset is CONCOR-D, an open research dataset captured
-        using overhead cameras and a trajectory tracker that records position, speed,
-        and heading for every object in the scene.
+        Site Sentinel started with {_perf['training_sessions']} annotated trajectory sessions
+        from the ListDB dataset (TU Dresden) — real aerial traffic footage, real vehicles,
+        real near-misses. The data was captured using GoPro and DJI Action 2 cameras and
+        processed with DataFromSky TrafficSurvey, which extracts per-object trajectories
+        (position, speed, heading) for every tracked object in the scene.
         </div>
         <div class="text-block">
         The question was straightforward: given what's happened in the last two seconds,
-        can you predict whether a vehicle and a worker are going to get dangerously close
+        can you predict whether a vehicle and a pedestrian are going to get dangerously close
         in the next four? The answer is yes — {_perf['recall']*100:.1f}% recall and
         {_perf['precision']*100:.1f}% precision with a dual-target Random Forest.
         </div>
@@ -119,15 +119,18 @@ def show_about_page(render_footer: Callable[[], None]) -> None:
     with tab_data:
         st.markdown(
             f"""
-            #### CONCOR-D Dataset
+            #### ListDB Dataset
 
-            - **Source**: Open research dataset from a German road construction site
-            - **Sessions**: {_perf['training_sessions']} annotated trajectory files spanning
-              three seasons (2019, 2020, 2022)
-            - **Format**: DFS Viewer trajectory CSV — each row is one tracked object,
+            - **Source**: Open aerial traffic dataset — TU Dresden (CC BY-NC 4.0)
+            - **Sessions**: {_perf['training_sessions']} annotated trajectory files
+            - **Cameras**: GoPro and DJI Action 2, processed with DataFromSky TrafficSurvey
+            - **Format**: Trajectory CSV — each row is one tracked object,
               with a 7-field-per-timestep blob (x_utm, y_utm, speed, tangential_acc,
               lateral_acc, timestamp, heading)
-            - **Objects**: Vehicles (cars, trucks, heavy machinery) and workers (pedestrians)
+            - **Objects**: Vehicles (cars, trucks) and pedestrians
+
+            > Bäumler et al. (2023). "Generating representative test scenarios."
+            > 27th ESV Conference, Yokohama. Paper No. 23-0122-O.
 
             #### Feature Engineering
 
