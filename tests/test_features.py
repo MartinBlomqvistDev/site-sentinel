@@ -31,7 +31,7 @@ class TestMotionFeatures:
         # First row has no previous position, so speed is 0
         assert car_rows.iloc[0]["speed_ms"] == pytest.approx(0.0, abs=1e-6)
         # All subsequent rows should be 10 m/s
-        assert (car_rows.iloc[1:]["speed_ms"] == pytest.approx(10.0, abs=1e-3)).all()
+        assert np.allclose(car_rows.iloc[1:]["speed_ms"].values, 10.0, atol=1e-3)
 
     def test_stationary_object_has_zero_speed(self, tiny_trajectory_df: pd.DataFrame) -> None:
         result = compute_motion_features(tiny_trajectory_df)
@@ -146,7 +146,7 @@ class TestInteractionFeatures:
             vehicle_class="Car", vulnerable_class="Pedestrian",
         )
         if not result.empty:
-            assert (result["ttc"] == pytest.approx(100.0, abs=1e-3)).all()
+            assert np.allclose(result["ttc"].values, 100.0, atol=1e-3)
 
 
 class TestTargetVariables:

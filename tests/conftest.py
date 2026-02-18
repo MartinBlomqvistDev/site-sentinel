@@ -60,9 +60,10 @@ def valid_csv_content() -> str:
     and the trajectory blob (column 12+) matter to the parser.
     """
     meta = ";".join(["x"] * 10)  # 10 filler metadata columns after track_id + class
-    # Each timestep: x, y, speed, tan_acc, lat_acc, time, heading
-    traj_obj1 = "1.0;2.0;3.0;0.0;0.0;0.0;45.0;7.0;0.0;0.0;0.0;1.0;2.0;3.0;0.0;0.0;1.0;45.0"
-    traj_obj2 = "10.0;20.0;0.0;0.0;0.0;0.0;0.0;10.0;20.0;0.0;0.0;1.0;0.0;10.0;20.0;0.0;0.0;1.0;0.0"
+    # Each timestep: x;y;speed;tan_acc;lat_acc;time;heading  (7 fields, exactly)
+    # Two timesteps per object = 14 tokens total
+    traj_obj1 = "1.0;2.0;3.0;0.0;0.0;0.0;45.0;7.0;8.0;3.0;0.0;0.0;1.0;45.0"
+    traj_obj2 = "10.0;20.0;0.0;0.0;0.0;0.0;0.0;10.0;20.0;0.0;0.0;0.0;1.0;0.0"
     lines = [
         f"1;Car;{meta};{traj_obj1}",
         f"2;Pedestrian;{meta};{traj_obj2}",
