@@ -251,7 +251,7 @@ def show_about_page(render_footer: Callable[[], None]) -> None:
             """
             <div class="tech-card">
                 <div class="tech-name">Deployment</div>
-                <div class="tech-desc">Streamlit · Google Cloud Storage · GitHub Actions · joblib</div>
+                <div class="tech-desc">Streamlit · GitHub Actions · joblib</div>
             </div>
             """,
             unsafe_allow_html=True,
