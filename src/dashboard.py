@@ -207,8 +207,8 @@ def show_dashboard_page(render_footer: Callable[[], None]) -> None:
                 <div class="skill-label">Raw data to result</div>
                 <div class="skill-text">
                 Started with a safety question and built the full pipeline from scratch —
-                parser, calibration, feature engineering, training, rendering. No templates,
-                no hand-holding.
+                parser, calibration, feature engineering, training, rendering. Every piece
+                written from the ground up.
                 </div>
             </div>
             """,
@@ -221,8 +221,8 @@ def show_dashboard_page(render_footer: Callable[[], None]) -> None:
                 <div class="skill-label">Head-to-head comparison</div>
                 <div class="skill-text">
                 Ran XGBoost, LSTM, TCN, and Random Forest against the same dataset with
-                identical CV setup, then made a reasoned call on which one to ship — and
-                wrote down why.
+                identical CV setup. RF won on F1 and gives feature importances —
+                documented in the About page.
                 </div>
             </div>
             """,
