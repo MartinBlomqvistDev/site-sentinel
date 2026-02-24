@@ -51,7 +51,7 @@ pipeline/06_render_video.py
         │
         ▼
 Streamlit App (src/)
-  ├── Dashboard: embeds demo video from GCS, shows model metrics
+  ├── Dashboard: embeds demo video, shows model metrics
   └── About: full technical write-up of dataset, model, and results
 ```
 

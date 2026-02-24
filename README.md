@@ -27,7 +27,7 @@ across 129 annotated sessions from the ListDB aerial traffic dataset (TU Dresden
   preventive warning (danger within 4s)
 - **Renders** an annotated demo video with a hysteresis state machine
   (SAFE → APPROACHING → IMMINENT) over a 15-frame sliding window to prevent alert flickering
-- **Deploys** a Streamlit app serving the demo and technical results from GCS
+- **Deploys** a Streamlit app serving the demo video and technical results
 
 ---
 
