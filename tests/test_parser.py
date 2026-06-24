@@ -33,9 +33,7 @@ class TestParseValidFile:
     def test_sorted_by_track_then_time(self, valid_csv_file: Path) -> None:
         df = parse_trajectory_csv(valid_csv_file)
         for track_id, group in df.groupby("track_id"):
-            assert group["time"].is_monotonic_increasing, (
-                f"Time not monotonic for track {track_id}"
-            )
+            assert group["time"].is_monotonic_increasing, f"Time not monotonic for track {track_id}"
 
 
 class TestColumnDtypes:

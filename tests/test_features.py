@@ -46,12 +46,32 @@ class TestMotionFeatures:
 
     def test_zero_dt_does_not_cause_division_error(self) -> None:
         """Two consecutive rows with identical timestamps should not crash."""
-        df = pd.DataFrame([
-            {"track_id": "1", "object_class": "Car", "x": 0.0, "y": 0.0, "time": 0.0,
-             "speed": 0.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0},
-            {"track_id": "1", "object_class": "Car", "x": 1.0, "y": 0.0, "time": 0.0,
-             "speed": 0.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0},
-        ])
+        df = pd.DataFrame(
+            [
+                {
+                    "track_id": "1",
+                    "object_class": "Car",
+                    "x": 0.0,
+                    "y": 0.0,
+                    "time": 0.0,
+                    "speed": 0.0,
+                    "tangential_acc": 0.0,
+                    "lateral_acc": 0.0,
+                    "heading": 0.0,
+                },
+                {
+                    "track_id": "1",
+                    "object_class": "Car",
+                    "x": 1.0,
+                    "y": 0.0,
+                    "time": 0.0,
+                    "speed": 0.0,
+                    "tangential_acc": 0.0,
+                    "lateral_acc": 0.0,
+                    "heading": 0.0,
+                },
+            ]
+        )
         result = compute_motion_features(df)
         assert not result["velocity_x"].isna().any()
         assert not np.isinf(result["velocity_x"]).any()
@@ -64,20 +84,33 @@ class TestInteractionFeatures:
     def test_returns_dataframe(self, tiny_trajectory_df: pd.DataFrame) -> None:
         motion_df = self._motion_df(tiny_trajectory_df)
         result = compute_interaction_features(
-            motion_df, frame_rate=1.0, time_horizon_s=4.0, rolling_window_s=2.0,
-            vehicle_class="Car", vulnerable_class="Pedestrian",
+            motion_df,
+            frame_rate=1.0,
+            time_horizon_s=4.0,
+            rolling_window_s=2.0,
+            vehicle_class="Car",
+            vulnerable_class="Pedestrian",
         )
         assert isinstance(result, pd.DataFrame)
 
     def test_has_required_feature_columns(self, tiny_trajectory_df: pd.DataFrame) -> None:
         motion_df = self._motion_df(tiny_trajectory_df)
         result = compute_interaction_features(
-            motion_df, frame_rate=1.0, time_horizon_s=4.0, rolling_window_s=2.0,
-            vehicle_class="Car", vulnerable_class="Pedestrian",
+            motion_df,
+            frame_rate=1.0,
+            time_horizon_s=4.0,
+            rolling_window_s=2.0,
+            vehicle_class="Car",
+            vulnerable_class="Pedestrian",
         )
         required = [
-            "rel_distance", "rel_speed", "speed_ms_car", "speed_ms_vuln",
-            "approach_speed", "ttc", "future_rel_dist",
+            "rel_distance",
+            "rel_speed",
+            "speed_ms_car",
+            "speed_ms_vuln",
+            "approach_speed",
+            "ttc",
+            "future_rel_dist",
         ]
         for col in required:
             assert col in result.columns, f"Missing column: {col}"
@@ -85,8 +118,12 @@ class TestInteractionFeatures:
     def test_rel_distance_is_positive(self, tiny_trajectory_df: pd.DataFrame) -> None:
         motion_df = self._motion_df(tiny_trajectory_df)
         result = compute_interaction_features(
-            motion_df, frame_rate=1.0, time_horizon_s=4.0, rolling_window_s=2.0,
-            vehicle_class="Car", vulnerable_class="Pedestrian",
+            motion_df,
+            frame_rate=1.0,
+            time_horizon_s=4.0,
+            rolling_window_s=2.0,
+            vehicle_class="Car",
+            vulnerable_class="Pedestrian",
         )
         if not result.empty:
             assert (result["rel_distance"] > 0).all()
@@ -95,8 +132,12 @@ class TestInteractionFeatures:
         """future_rel_dist should never be below 0.1."""
         motion_df = self._motion_df(tiny_trajectory_df)
         result = compute_interaction_features(
-            motion_df, frame_rate=1.0, time_horizon_s=4.0, rolling_window_s=2.0,
-            vehicle_class="Car", vulnerable_class="Pedestrian",
+            motion_df,
+            frame_rate=1.0,
+            time_horizon_s=4.0,
+            rolling_window_s=2.0,
+            vehicle_class="Car",
+            vulnerable_class="Pedestrian",
         )
         if not result.empty:
             assert (result["future_rel_dist"] >= 0.1).all()
@@ -104,8 +145,12 @@ class TestInteractionFeatures:
     def test_rolling_window_same_length_as_input(self, tiny_trajectory_df: pd.DataFrame) -> None:
         motion_df = self._motion_df(tiny_trajectory_df)
         result = compute_interaction_features(
-            motion_df, frame_rate=1.0, time_horizon_s=4.0, rolling_window_s=2.0,
-            vehicle_class="Car", vulnerable_class="Pedestrian",
+            motion_df,
+            frame_rate=1.0,
+            time_horizon_s=4.0,
+            rolling_window_s=2.0,
+            vehicle_class="Car",
+            vulnerable_class="Pedestrian",
         )
         if not result.empty:
             assert not result["rel_dist_avg_2s"].isna().any()
@@ -114,9 +159,12 @@ class TestInteractionFeatures:
     def test_empty_result_if_no_matching_classes(self, tiny_trajectory_df: pd.DataFrame) -> None:
         motion_df = self._motion_df(tiny_trajectory_df)
         result = compute_interaction_features(
-            motion_df, frame_rate=1.0, time_horizon_s=4.0, rolling_window_s=2.0,
-            vehicle_class="Truck",       # not in the fixture
-            vulnerable_class="Worker",   # not in the fixture
+            motion_df,
+            frame_rate=1.0,
+            time_horizon_s=4.0,
+            rolling_window_s=2.0,
+            vehicle_class="Truck",  # not in the fixture
+            vulnerable_class="Worker",  # not in the fixture
         )
         assert result.empty
 
@@ -125,25 +173,63 @@ class TestInteractionFeatures:
         Objects moving away from each other have no collision on current trajectory.
         TTC should be filled with the sentinel value (100), not NaN or negative.
         """
-        df = pd.DataFrame([
-            # Vehicle moves away (negative velocity_x relative to worker)
-            {"track_id": "1", "object_class": "Car",
-             "x": 100.0, "y": 0.0, "time": 0.0,
-             "speed": 0.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0},
-            {"track_id": "1", "object_class": "Car",
-             "x": 110.0, "y": 0.0, "time": 1.0,
-             "speed": 0.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0},
-            {"track_id": "2", "object_class": "Pedestrian",
-             "x": 0.0, "y": 0.0, "time": 0.0,
-             "speed": 0.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0},
-            {"track_id": "2", "object_class": "Pedestrian",
-             "x": 0.0, "y": 0.0, "time": 1.0,
-             "speed": 0.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0},
-        ])
+        df = pd.DataFrame(
+            [
+                # Vehicle moves away (negative velocity_x relative to worker)
+                {
+                    "track_id": "1",
+                    "object_class": "Car",
+                    "x": 100.0,
+                    "y": 0.0,
+                    "time": 0.0,
+                    "speed": 0.0,
+                    "tangential_acc": 0.0,
+                    "lateral_acc": 0.0,
+                    "heading": 0.0,
+                },
+                {
+                    "track_id": "1",
+                    "object_class": "Car",
+                    "x": 110.0,
+                    "y": 0.0,
+                    "time": 1.0,
+                    "speed": 0.0,
+                    "tangential_acc": 0.0,
+                    "lateral_acc": 0.0,
+                    "heading": 0.0,
+                },
+                {
+                    "track_id": "2",
+                    "object_class": "Pedestrian",
+                    "x": 0.0,
+                    "y": 0.0,
+                    "time": 0.0,
+                    "speed": 0.0,
+                    "tangential_acc": 0.0,
+                    "lateral_acc": 0.0,
+                    "heading": 0.0,
+                },
+                {
+                    "track_id": "2",
+                    "object_class": "Pedestrian",
+                    "x": 0.0,
+                    "y": 0.0,
+                    "time": 1.0,
+                    "speed": 0.0,
+                    "tangential_acc": 0.0,
+                    "lateral_acc": 0.0,
+                    "heading": 0.0,
+                },
+            ]
+        )
         motion_df = compute_motion_features(df)
         result = compute_interaction_features(
-            motion_df, frame_rate=1.0, time_horizon_s=4.0, rolling_window_s=2.0,
-            vehicle_class="Car", vulnerable_class="Pedestrian",
+            motion_df,
+            frame_rate=1.0,
+            time_horizon_s=4.0,
+            rolling_window_s=2.0,
+            vehicle_class="Car",
+            vulnerable_class="Pedestrian",
         )
         if not result.empty:
             assert np.allclose(result["ttc"].values, 100.0, atol=1e-3)
@@ -158,9 +244,7 @@ class TestTargetVariables:
         assert "Y_standard" in df.columns
         assert df["Y_standard"].dtype in (int, "int64", "int32")
 
-    def test_y_preventive_fires_before_y_standard(
-        self, tiny_interaction_df: pd.DataFrame
-    ) -> None:
+    def test_y_preventive_fires_before_y_standard(self, tiny_interaction_df: pd.DataFrame) -> None:
         """
         Y_preventive should turn on at least as early as Y_standard — it's a
         lookahead label, so it should flag frames before the danger arrives.

@@ -16,6 +16,7 @@ import pytest
 # Tiny trajectory DataFrame (parser output shape)
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def tiny_trajectory_df() -> pd.DataFrame:
     """
@@ -30,27 +31,52 @@ def tiny_trajectory_df() -> pd.DataFrame:
     """
     records = []
     for t in range(5):
-        records.append({
-            "track_id": "1", "object_class": "Car",
-            "x": float(10 * t), "y": 0.0, "time": float(t),
-            "speed": 10.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0,
-        })
-        records.append({
-            "track_id": "2", "object_class": "Pedestrian",
-            "x": 50.0, "y": 100.0, "time": float(t),
-            "speed": 0.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 0.0,
-        })
-        records.append({
-            "track_id": "3", "object_class": "Bicycle",
-            "x": 0.0, "y": float(5 * t), "time": float(t),
-            "speed": 5.0, "tangential_acc": 0.0, "lateral_acc": 0.0, "heading": 90.0,
-        })
+        records.append(
+            {
+                "track_id": "1",
+                "object_class": "Car",
+                "x": float(10 * t),
+                "y": 0.0,
+                "time": float(t),
+                "speed": 10.0,
+                "tangential_acc": 0.0,
+                "lateral_acc": 0.0,
+                "heading": 0.0,
+            }
+        )
+        records.append(
+            {
+                "track_id": "2",
+                "object_class": "Pedestrian",
+                "x": 50.0,
+                "y": 100.0,
+                "time": float(t),
+                "speed": 0.0,
+                "tangential_acc": 0.0,
+                "lateral_acc": 0.0,
+                "heading": 0.0,
+            }
+        )
+        records.append(
+            {
+                "track_id": "3",
+                "object_class": "Bicycle",
+                "x": 0.0,
+                "y": float(5 * t),
+                "time": float(t),
+                "speed": 5.0,
+                "tangential_acc": 0.0,
+                "lateral_acc": 0.0,
+                "heading": 90.0,
+            }
+        )
     return pd.DataFrame(records)
 
 
 # ---------------------------------------------------------------------------
 # Minimal CSV content for parser tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
 def valid_csv_content() -> str:
@@ -93,6 +119,7 @@ def malformed_csv_file(tmp_path: Path) -> Path:
 # Minimal interaction DataFrame (feature engineering output shape)
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def tiny_interaction_df() -> pd.DataFrame:
     """
@@ -109,21 +136,23 @@ def tiny_interaction_df() -> pd.DataFrame:
     records = []
     for t in range(10):
         dist = 50.0 - 5.0 * t  # vehicle closing at 5 m/s
-        records.append({
-            "track_id_vuln": "2",
-            "track_id_car": "1",
-            "time": float(t),
-            "rel_distance": max(0.1, dist),
-            "rel_speed": 5.0,
-            "speed_ms_vuln": 0.0,
-            "speed_ms_car": 5.0,
-            "accel_ms2_vuln": 0.0,
-            "accel_ms2_car": 0.0,
-            "approach_speed": 5.0,
-            "ttc": max(0.1, dist) / 5.0,
-            "future_rel_dist": max(0.1, dist - 5.0 * 4.0),
-            "rel_dist_avg_2s": max(0.1, dist),
-            "rel_speed_avg_2s": 5.0,
-            "future_rel_dist_avg_2s": max(0.1, dist - 5.0 * 4.0),
-        })
+        records.append(
+            {
+                "track_id_vuln": "2",
+                "track_id_car": "1",
+                "time": float(t),
+                "rel_distance": max(0.1, dist),
+                "rel_speed": 5.0,
+                "speed_ms_vuln": 0.0,
+                "speed_ms_car": 5.0,
+                "accel_ms2_vuln": 0.0,
+                "accel_ms2_car": 0.0,
+                "approach_speed": 5.0,
+                "ttc": max(0.1, dist) / 5.0,
+                "future_rel_dist": max(0.1, dist - 5.0 * 4.0),
+                "rel_dist_avg_2s": max(0.1, dist),
+                "rel_speed_avg_2s": 5.0,
+                "future_rel_dist_avg_2s": max(0.1, dist - 5.0 * 4.0),
+            }
+        )
     return pd.DataFrame(records)

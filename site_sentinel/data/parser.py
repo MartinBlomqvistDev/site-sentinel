@@ -31,8 +31,8 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 # DFS Viewer CSV format constants
-_METADATA_COLS = 12   # columns before the trajectory blob
-_STRIDE = 7           # values per timestep in the trajectory blob
+_METADATA_COLS = 12  # columns before the trajectory blob
+_STRIDE = 7  # values per timestep in the trajectory blob
 _TIMESTEP_FIELDS = [
     "x",
     "y",
@@ -115,9 +115,7 @@ def parse_trajectory_csv(path: Path | str) -> pd.DataFrame:
                     row.update(dict(zip(_TIMESTEP_FIELDS, map(float, group), strict=True)))
                     records.append(row)
                 except ValueError:
-                    logger.debug(
-                        "%s: non-numeric token at stride index %d — skipped", path.name, i
-                    )
+                    logger.debug("%s: non-numeric token at stride index %d — skipped", path.name, i)
 
     if skipped_rows:
         logger.info("%s: skipped %d malformed rows", path.name, skipped_rows)

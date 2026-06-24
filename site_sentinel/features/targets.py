@@ -71,9 +71,8 @@ def create_dual_targets(
     pair_cols = [c for c in ("track_id_vuln", "track_id_car") if c in df.columns]
 
     if pair_cols:
-        df["Y_preventive"] = (
-            df.groupby(pair_cols)["Y_standard"]
-            .transform(lambda s: _rolling_future_max(s, lead_frames))
+        df["Y_preventive"] = df.groupby(pair_cols)["Y_standard"].transform(
+            lambda s: _rolling_future_max(s, lead_frames)
         )
     else:
         df["Y_preventive"] = _rolling_future_max(df["Y_standard"], lead_frames)
@@ -98,10 +97,4 @@ def _rolling_future_max(series: pd.Series, window: int) -> pd.Series:
     """
     # Reverse → rolling max → reverse back gives max(series[i : i+window]) at position i.
     # No shift needed — the double-reversal already aligns the window correctly.
-    return (
-        series[::-1]
-        .rolling(window=window, min_periods=1)
-        .max()[::-1]
-        .fillna(0)
-        .astype(int)
-    )
+    return series[::-1].rolling(window=window, min_periods=1).max()[::-1].fillna(0).astype(int)

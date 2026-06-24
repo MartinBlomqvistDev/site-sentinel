@@ -235,12 +235,8 @@ def _compute_pair_metrics(
 
     # --- Rolling averages ---
     min_p = 1  # include partial windows at the start of each session
-    out["rel_dist_avg_2s"] = (
-        out["rel_distance"].rolling(rolling_frames, min_periods=min_p).mean()
-    )
-    out["rel_speed_avg_2s"] = (
-        out["rel_speed"].rolling(rolling_frames, min_periods=min_p).mean()
-    )
+    out["rel_dist_avg_2s"] = out["rel_distance"].rolling(rolling_frames, min_periods=min_p).mean()
+    out["rel_speed_avg_2s"] = out["rel_speed"].rolling(rolling_frames, min_periods=min_p).mean()
     out["future_rel_dist_avg_2s"] = (
         out["future_rel_dist"].rolling(rolling_frames, min_periods=min_p).mean()
     )
