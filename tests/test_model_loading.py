@@ -17,19 +17,24 @@ import pytest
 
 # Path to the trained model relative to the project root
 _MODEL_PATH = Path(__file__).parent.parent / "models" / "rf_master_predictor_dual_lead_tuned.pkl"
-_SKIP_MODEL = (
-    os.getenv("SITE_SENTINEL_SKIP_MODEL") == "true"
-    or not _MODEL_PATH.exists()
-)
+_SKIP_MODEL = os.getenv("SITE_SENTINEL_SKIP_MODEL") == "true" or not _MODEL_PATH.exists()
 _SKIP_REASON = (
     "Model file not present (run pipeline/04_train_random_forest.py first, "
     "or set SITE_SENTINEL_SKIP_MODEL=true to skip these tests in CI)."
 )
 
 FEATURE_COLUMNS = [
-    "rel_distance", "rel_speed", "speed_ms_vuln", "speed_ms_car",
-    "accel_ms2_vuln", "accel_ms2_car", "ttc", "approach_speed",
-    "rel_dist_avg_2s", "rel_speed_avg_2s", "future_rel_dist_avg_2s",
+    "rel_distance",
+    "rel_speed",
+    "speed_ms_vuln",
+    "speed_ms_car",
+    "accel_ms2_vuln",
+    "accel_ms2_car",
+    "ttc",
+    "approach_speed",
+    "rel_dist_avg_2s",
+    "rel_speed_avg_2s",
+    "future_rel_dist_avg_2s",
 ]
 
 
@@ -37,6 +42,7 @@ FEATURE_COLUMNS = [
 def model_dict() -> dict:
     """Load the pkl model dict once for all tests in this module."""
     import joblib
+
     return joblib.load(_MODEL_PATH)
 
 
@@ -66,9 +72,7 @@ class TestModelFile:
                 f"Expected 11 features, got {len(model.feature_names_in_)}"
             )
         elif hasattr(model, "n_features_in_"):
-            assert model.n_features_in_ == 11, (
-                f"Expected 11 features, got {model.n_features_in_}"
-            )
+            assert model.n_features_in_ == 11, f"Expected 11 features, got {model.n_features_in_}"
 
     def test_predict_output_shape(self, model_dict: dict) -> None:
         """Two sample rows → predict_proba shape should be (2, 2)."""
@@ -85,7 +89,8 @@ class TestModelFile:
     def test_predict_probabilities_in_range(self, model_dict: dict) -> None:
         """All predicted probabilities must be in [0, 1]."""
         model = model_dict["preventive"]
-        X = pd.DataFrame([{c: np.random.uniform(0, 10) for c in FEATURE_COLUMNS}
-                          for _ in range(10)])
+        X = pd.DataFrame(
+            [{c: np.random.uniform(0, 10) for c in FEATURE_COLUMNS} for _ in range(10)]
+        )
         proba = model.predict_proba(X)
         assert (proba >= 0.0).all() and (proba <= 1.0).all()
