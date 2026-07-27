@@ -111,7 +111,7 @@ def _train_rf(
             cv=_search_cfg["cv"],
             scoring=_search_cfg["scoring"],
             random_state=_search_cfg["random_state"],
-            n_jobs=-1,
+            n_jobs=_search_cfg.get("n_jobs", 4),
             verbose=0,
         )
         search.fit(X_train_res, y_train_res)

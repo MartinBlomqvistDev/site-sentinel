@@ -44,6 +44,11 @@ random_forest:
     cv: 3
     scoring: "f1"
     random_state: 42
+    # Bounded deliberately. This was n_jobs=-1, which on a 22-core machine
+    # starts 22 workers, each holding its own copy of the 250k-row frame and
+    # then its SMOTE resample on top. That exhausts memory and the run dies
+    # partway through with an ArrayMemoryError. Raise it if you have headroom.
+    n_jobs: 4
   param_grid:
     n_estimators: [100, 200, 300, 400]
     max_depth: [5, 10, 15, null]
