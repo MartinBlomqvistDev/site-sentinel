@@ -45,7 +45,7 @@ _tcn_cfg = _cfg.get("tcn", {})
 _cv_cfg = _cfg["cross_validation"]
 _tgt_cfg = _cfg["targets"]
 
-MASTER_CSV: str = _cfg["random_forest"]["master_csv"]
+MASTER_CSV: str = _cfg["data"]["master_csv"]
 OUTPUT_MODEL: str = "models/tcn_master_predictor.keras"
 FEATURES: list[str] = _cfg["features"]["columns"]
 

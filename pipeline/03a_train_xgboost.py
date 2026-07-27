@@ -42,7 +42,7 @@ _cv_cfg = _cfg["cross_validation"]
 _tgt_cfg = _cfg["targets"]
 _xgb_cfg = _cfg.get("xgboost", {})
 
-MASTER_CSV: str = _rf_cfg["master_csv"]
+MASTER_CSV: str = _cfg["data"]["master_csv"]
 OUTPUT_MODEL: str = "models/xgb_risk_predictor_tuned.pkl"
 FEATURES: list[str] = _cfg["features"]["columns"]
 

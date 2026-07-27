@@ -93,7 +93,7 @@ def _process_session(csv_path: Path) -> pd.DataFrame | None:
 
 def main() -> None:
     raw_dir = Path(_cfg["data"]["raw_trajectory_dir"])
-    output_csv = Path(_mcfg["random_forest"]["master_csv"])
+    output_csv = Path(_mcfg["data"]["master_csv"])
 
     logger.info("Building master training dataset from %s", raw_dir)
 

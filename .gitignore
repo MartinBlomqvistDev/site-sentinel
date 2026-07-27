@@ -36,6 +36,9 @@ models/
 # YOLO training runs
 runs/
 
+# Training run logs (regenerated on every run)
+*.log
+
 # ----------------------------------------------------------------------
 # 3. SECRETS AND CREDENTIALS (never commit these)
 # ----------------------------------------------------------------------
