@@ -2,7 +2,7 @@
 
 Real-time near-miss prediction for road construction zones.
 
-**Live app → https://sitesentinel.streamlit.app/**
+**Annotated demo → https://youtu.be/3FAOE39YhRw**
 
 [![Lint](https://github.com/MartinBlomqvistDev/site-sentinel/actions/workflows/lint.yml/badge.svg)](https://github.com/MartinBlomqvistDev/site-sentinel/actions/workflows/lint.yml)
 [![Tests](https://github.com/MartinBlomqvistDev/site-sentinel/actions/workflows/test.yml/badge.svg)](https://github.com/MartinBlomqvistDev/site-sentinel/actions/workflows/test.yml)
