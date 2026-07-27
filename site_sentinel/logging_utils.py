@@ -21,7 +21,20 @@ def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
     """
     logger = logging.getLogger(name)
     if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
+        # Force UTF-8 on the stream. Several pipeline messages contain "→", and
+        # on a Windows console stdout defaults to cp1252, so logging raised
+        # UnicodeEncodeError and printed a traceback for every fold instead of
+        # the result. Logging swallows the error, so the run continued and the
+        # numbers were simply lost.
+        stream = sys.stdout
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except (ValueError, OSError):
+                # Detached or redirected in a way that cannot be reconfigured;
+                # the errors="replace" fallback below still keeps output going.
+                pass
+        handler = logging.StreamHandler(stream)
         handler.setFormatter(
             logging.Formatter(
                 fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",

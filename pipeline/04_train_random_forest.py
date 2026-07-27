@@ -60,6 +60,7 @@ FEATURES: list[str] = _cfg["features"]["columns"]
 FRAME_RATE: float = load_config("pipeline")["processing"]["frame_rate"]
 LEAD_TIME_S: float = _tgt_cfg["preventive_lead_time_s"]
 TTC_THRESHOLD_S: float = _tgt_cfg["standard_ttc_threshold_s"]
+RISK_DISTANCE_M: float = _tgt_cfg["preventive_risk_distance_m"]
 
 CV_FOLDS: int = _cv_cfg["n_splits"]
 SMOTE_SEED: int = _cfg["smote"]["random_state"]
@@ -163,7 +164,13 @@ def main() -> None:
         return
 
     df = pd.read_csv(master_csv)
-    df = create_dual_targets(df, lead_time_s=LEAD_TIME_S, frame_rate=FRAME_RATE, ttc_threshold_s=TTC_THRESHOLD_S)
+    df = create_dual_targets(
+        df,
+        lead_time_s=LEAD_TIME_S,
+        frame_rate=FRAME_RATE,
+        ttc_threshold_s=TTC_THRESHOLD_S,
+        risk_distance_m=RISK_DISTANCE_M,
+    )
 
     available_features = [f for f in FEATURES if f in df.columns]
     if len(available_features) < len(FEATURES):

@@ -244,22 +244,82 @@ class TestTargetVariables:
         assert "Y_standard" in df.columns
         assert df["Y_standard"].dtype in (int, "int64", "int32")
 
-    def test_y_preventive_fires_before_y_standard(self, tiny_interaction_df: pd.DataFrame) -> None:
+    @staticmethod
+    def _proximity_df(distances: list[float], pair: str = "1") -> pd.DataFrame:
+        """One pair, one row per second, with rel_distance driven directly."""
+        return pd.DataFrame(
+            {
+                "track_id_vuln": "2",
+                "track_id_car": pair,
+                "rel_distance": distances,
+                "ttc": [100.0] * len(distances),
+            }
+        )
+
+    def test_y_preventive_fires_in_the_window_before_a_proximity_event(self) -> None:
         """
-        Y_preventive should turn on at least as early as Y_standard — it's a
-        lookahead label, so it should flag frames before the danger arrives.
+        The proximity event is at index 5. With a 3-frame lookahead, indices 2,
+        3 and 4 should be labelled and nothing before index 2 should be.
         """
         df = create_dual_targets(
-            tiny_interaction_df, lead_time_s=4.0, frame_rate=1.0, ttc_threshold_s=2.0
+            self._proximity_df([50, 50, 50, 50, 50, 1.0, 50, 50]),
+            lead_time_s=3.0,
+            frame_rate=1.0,
+            risk_distance_m=2.0,
         )
-        # Find first index where standard fires
-        std_first = df[df["Y_standard"] == 1].index.min()
-        prev_first = df[df["Y_preventive"] == 1].index.min()
+        assert df["Y_preventive"].tolist() == [0, 0, 1, 1, 1, 0, 0, 0]
 
-        if not (pd.isna(std_first) or pd.isna(prev_first)):
-            assert prev_first <= std_first, (
-                f"Preventive label fires at {prev_first} but standard fires at {std_first}"
-            )
+    def test_y_preventive_excludes_the_current_frame(self) -> None:
+        """
+        A label that includes the frame being scored is not a prediction. Index
+        5 is the event itself and must not be labelled by it.
+        """
+        df = create_dual_targets(
+            self._proximity_df([50, 50, 50, 50, 50, 1.0, 50, 50]),
+            lead_time_s=3.0,
+            frame_rate=1.0,
+            risk_distance_m=2.0,
+        )
+        assert df["Y_preventive"].iloc[5] == 0
+
+    def test_y_preventive_does_not_leak_across_pairs(self) -> None:
+        """
+        Pair "1" ends with no event; pair "2" opens with one. The tail of the
+        first pair must not see the head of the second. The original
+        implementation shifted outside the groupby and did exactly that.
+        """
+        a = self._proximity_df([50, 50, 50, 50], pair="1")
+        b = self._proximity_df([1.0, 50, 50, 50], pair="2")
+        df = create_dual_targets(
+            pd.concat([a, b], ignore_index=True),
+            lead_time_s=3.0,
+            frame_rate=1.0,
+            risk_distance_m=2.0,
+        )
+        assert df["Y_preventive"].iloc[:4].sum() == 0
+
+    def test_y_preventive_is_independent_of_y_standard(self) -> None:
+        """
+        The two targets answer different questions: proximity in metres versus
+        time-to-collision in seconds. A frame can be dangerous on TTC while no
+        proximity event is coming, and the labels must be free to disagree.
+        """
+        df = create_dual_targets(
+            pd.DataFrame(
+                {
+                    "track_id_vuln": "2",
+                    "track_id_car": "1",
+                    "rel_distance": [50.0] * 5,
+                    "ttc": [0.5] * 5,
+                }
+            ),
+            lead_time_s=3.0,
+            frame_rate=1.0,
+            ttc_threshold_s=2.0,
+            risk_distance_m=2.0,
+        )
+        assert df["Y_standard"].sum() == 5
+        assert df["Y_preventive"].sum() == 0
 
     def test_no_nan_in_targets(self, tiny_interaction_df: pd.DataFrame) -> None:
         df = create_dual_targets(
