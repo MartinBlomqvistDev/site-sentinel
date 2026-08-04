@@ -17,13 +17,24 @@ project:
 
 # Reported performance of the deployed dual-target Random Forest model.
 # These numbers come from 5-fold stratified cross-validation on the full master dataset.
+#
+# They belong to the PREVENTIVE target, confirmed by re-running pipeline/04 on
+# 2026-07-27: P 0.8749 +/- 0.0466, R 0.9864 +/- 0.0025, F1 0.9266 +/- 0.0262.
+# The target was unrecorded for a long time because the original script printed
+# its scores to a terminal and saved only the models.
+#
+# Do NOT report the standard target. Y_standard is `ttc <= 2s` and `ttc` is an
+# input feature, so the model reads the column: it scored F1 1.0000 on four
+# consecutive folds. That is a tautology, not a result.
 model_performance:
+  scored_target: "preventive"     # the 4s lookahead; NOT the immediate TTC target
   precision: 0.875       # Of all alerts raised, 87.5% were genuine near-misses
   recall: 0.986          # The system caught 98.6% of actual dangerous events
   f1_score: 0.927        # Harmonic mean of precision and recall
   model_type: "Random Forest"
   targets: "dual (preventive + immediate)"
   prediction_lead_time_s: 4.0     # How far ahead the preventive target looks
+  risk_distance_m: 2.0            # A proximity event is separation at or below this
   ttc_threshold_s: 2.0            # TTC below this triggers the immediate danger label
   cv_folds: 5
   feature_count: 11

@@ -15,7 +15,8 @@ seconds of trajectory data, it predicts whether a near-miss will occur in the ne
 early enough for someone to act.
 
 It catches **98.6% of real dangerous events** at 87.5% precision (F1 = 0.927, 5-fold CV)
-across 129 annotated sessions from the ListDB aerial traffic dataset (TU Dresden).
+across 129 annotated sessions from the ListDB aerial traffic dataset (TU Dresden). Those
+figures are for the preventive target, the four-second lookahead.
 
 ---
 
@@ -41,8 +42,10 @@ object with a semicolon-delimited blob of 7-value timestep groups
 (UTM x/y, speed, tangential acceleration, lateral acceleration, timestamp, heading).
 
 The dataset contains 129 annotated sessions covering vehicles and pedestrians at street level.
-Near-miss events are rare — roughly 2-5% of all frames — which creates severe class imbalance
-that SMOTE addresses during training.
+Near-miss events are rare in the raw footage, but the master dataset is built from
+vehicle-worker pairs rather than frames, so the training targets are less skewed than that:
+14.7% positive for the preventive label and 12.4% for the immediate one. SMOTE is applied to
+both during training.
 
 > Bäumler, M., Lehmann, M., Prokop, G. (2023). "Generating representative test scenarios:
 > The FUSE4Rep process model to collect and analyse traffic observation data."
@@ -61,7 +64,7 @@ cross-validation and SMOTE resampling.
 | XGBoost | ~0.82 | ~0.91 | ~0.86 | Strong gradient-boosting baseline |
 | LSTM | ~0.80 | ~0.89 | ~0.84 | 25-frame sequence input; no gain over RF |
 | TCN | ~0.81 | ~0.90 | ~0.85 | Dilations [1,2,4,8]; similar to LSTM |
-| **Random Forest** | **0.875** | **0.986** | **0.927** | **Chosen** — best F1, interpretable |
+| **Random Forest** | **0.875** | **0.986** | **0.927** | **Chosen** — best on all three, interpretable |
 
 The sequential models didn't beat the RF. The rolling features in the tabular dataset
 already encode the temporal context the recurrent models were hoping to learn — 25-frame
